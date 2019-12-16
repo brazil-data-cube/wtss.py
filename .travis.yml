@@ -1,0 +1,26 @@
+sudo: false
+
+language: python
+
+cache:
+    directories:
+        - $HOME/.cache/pip
+
+dist: bionic
+
+python:
+    - "3.7"
+
+before_install:
+    - pip install --upgrade pip
+    - pip install --upgrade setuptools
+    - pip install --upgrade wheel
+
+install:
+    - pip install -e .[tests,docs]
+
+script:
+    - ./run-test.sh
+
+after_success:
+    - coveralls

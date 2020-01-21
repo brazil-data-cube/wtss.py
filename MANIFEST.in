@@ -14,6 +14,7 @@ include LICENSE
 recursive-exclude doc/sphinx/_build *
 recursive-include doc *.bat
 recursive-include doc *.css
+recursive-include doc *.png
 recursive-include doc *.py
 recursive-include doc *.rst
 recursive-include doc Makefile

@@ -31,6 +31,12 @@ Python Client Library for Web Time Series Service
         :alt: Software Life Cycle
 
 
+**WTSS** is a lightweight web service for handling remote sensing imagery as time series. Given a location and a time interval you can retrieve the according time series as a Python list of real values.
+
+
+If you want to know more about WTSS service, please, take a look at its `specification <https://github.com/brazil-data-cube/wtss-spec>`_.
+
+
 Installation
 ============
 
@@ -47,6 +53,12 @@ Developer Documentation
 =======================
 
 See https://wtss.readthedocs.io/en/latest.
+
+
+References
+==========
+
+VINHAS, L.; QUEIROZ, G. R.; FERREIRA, K. R.; CÂMARA, G. `Web Services for Big Earth Observation Data <http://www.seer.ufu.br/index.php/revistabrasileiracartografia/article/view/44004>`_. Revista Brasileira de Cartografia, v. 69, n. 5, 18 maio 2017.
 
 
 License

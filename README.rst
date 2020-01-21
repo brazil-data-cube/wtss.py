@@ -52,7 +52,7 @@ See `RUNNING.rst <./RUNNING.rst>`_.
 Developer Documentation
 =======================
 
-See https://wtss.readthedocs.io/en/latest.
+See https://wtss.readthedocs.io/en/latest/.
 
 
 References

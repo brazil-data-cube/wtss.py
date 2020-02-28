@@ -23,15 +23,38 @@ Python Client Library for Web Time Series Service
         :alt: Code Coverage Test
 
 .. image:: https://readthedocs.org/projects/wtss/badge/?version=latest
-        :target: https://wtss.readthedocs.io/en/latest/?badge=latest
+        :target: https://wtss.readthedocs.io/en/latest/
         :alt: Documentation Status
 
 .. image:: https://img.shields.io/badge/lifecycle-experimental-orange.svg
         :target: https://www.tidyverse.org/lifecycle/#experimental
         :alt: Software Life Cycle
 
+.. image:: https://img.shields.io/github/tag/brazil-data-cube/wtss.py.svg
+        :target: https://github.com/brazil-data-cube/wtss.py/releases
+        :alt: Release
 
-**WTSS** is a lightweight web service for handling remote sensing imagery as time series. Given a location and a time interval you can retrieve the according time series as a Python list of real values.
+.. image:: https://badges.gitter.im/brazil-data-cube/community.png
+        :target: https://gitter.im/brazil-data-cube/community#
+        :alt: Join the chat
+
+
+About
+=====
+
+**W**\ eb **T**\ ime **S**\ eries **S**\ ervice (WTSS) is a lightweight web service for handling time series data from remote sensing imagery. Given a location and a time interval you can retrieve the according time series as a Python list of real values.
+
+
+In WTSS a coverage is a three dimensional array associate to spatial and temporal reference systems.
+
+
+WTSS is based on three operations:
+
+- ``list_coverages``: returns the list of all available coverages in the service.
+
+- ``describe_coverage``: returns the metadata of a given coverage.
+
+- ``time_series``: query the database for the list of values for a given location and time interval.
 
 
 If you want to know more about WTSS service, please, take a look at its `specification <https://github.com/brazil-data-cube/wtss-spec>`_.

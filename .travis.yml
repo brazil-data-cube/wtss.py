@@ -1,31 +1,44 @@
-sudo: false
+#
+# This file is part of Python Client Library for WTSS.
+# Copyright (C) 2020 INPE.
+#
+# Python Client Library for WTSS is free software; you can redistribute it and/or modify it
+# under the terms of the MIT License; see LICENSE file for more details.
+#
 
 language: python
 
+os: linux
+
 cache:
     directories:
-        - $HOME/.cache/pip
+        - "$HOME/.cache/pip"
+
+git:
+    quiet: true
+    submodules: false
 
 branches:
     only:
         - master
-        - b-0.7
 
 dist: bionic
 
+services:
+    - docker
+
 python:
-    - "3.7"
+    - 3.7
 
 before_install:
     - pip install --upgrade pip
     - pip install --upgrade setuptools
-    - pip install --upgrade wheel
 
 install:
     - pip install -e .[tests,docs]
 
 script:
-    - ./run-test.sh
+    - ./run-tests.sh
 
 after_success:
     - coveralls

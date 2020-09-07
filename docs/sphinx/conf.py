@@ -116,6 +116,9 @@ numfig_format = {
     'section': 'Section %s.'
 }
 
+copybutton_prompt_text = r'>>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: '
+copybutton_prompt_is_regexp = True
+
 #def setup(app):
 #    app.add_stylesheet('wtss.css')
 

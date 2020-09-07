@@ -10,5 +10,10 @@ WTSS API
 ========
 
 
-.. .. automodule:: wtss.cli
-..     :members:
+.. automodule:: wtss.wtss
+
+.. autoclass:: wtss.wtss.wtss
+    :members:
+    :private-members:
+
+    .. automethod:: __init__

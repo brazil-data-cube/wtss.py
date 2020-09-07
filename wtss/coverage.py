@@ -101,7 +101,7 @@ class Coverage(dict):
             <td colspan="3">{ymax}</td>
         </tr>
         <tr>
-            <td>Timeline</td>
+            <th>Timeline</th>
             <td>{timeline}</td>
         </tr>
     </tbody>

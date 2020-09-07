@@ -2,8 +2,5 @@ from wtss import *
 
 service = wtss('http://www.esensing.dpi.inpe.br')
 
-print(service)
+print(service._repr_html_())
 
-print(repr(service))
-
-print(service.coverages)

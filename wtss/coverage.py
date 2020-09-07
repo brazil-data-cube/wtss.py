@@ -91,7 +91,7 @@ class Coverage(dict):
         html =  '''\
 <table border="1" class="coverage">
     <thead>
-        <tr style="text-align: center;">
+        <tr style="text-align: left;">
             <th colspan="2"><b>Coverage: {name}</b></th>
         </tr>
     </thead>

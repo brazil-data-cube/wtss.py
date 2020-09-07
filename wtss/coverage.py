@@ -41,31 +41,96 @@ class Coverage(dict):
 
         This integrates a rich display in IPython.
         """
+        # attributes are displayed in nested table
+        attr_rows = []
+
+        for attr in self['attributes']:
+            att_row_html = f'''
+<tr>
+    <td>{attr["name"]}</td>
+    <td>{attr["description"]}</td>
+    <td>{attr["datatype"]}</td>
+    <td>{attr["valid_range"]}</td>
+    <td>{attr["scale_factor"]}</td>
+    <td>{attr["missing_value"]}</td>
+</tr>'''
+            attr_rows.append(att_row_html)
+
+        # the spatial extent is show in nested table
+        spatial_extent_row = f'''
+<table border="1" class="coverage" style="width: 100%;">
+    <thead>
+        <tr>
+            <th>xmin</th>
+            <th>ymin</th>
+            <th>xmax</th>
+            <th>ymax</th>
+        </tr>
+    </thead>
+    <tr>
+        <td>{self["spatial_extent"]["xmin"]}</td>
+        <td>{self["spatial_extent"]["ymin"]}</td>
+        <td>{self["spatial_extent"]["xmax"]}</td>
+        <td>{self["spatial_extent"]["ymax"]}</td>
+    </tr>
+</table>
+'''
+
+        # the timeline hides some values
+        dates = []
+
+        if len(self['timeline']) > 5:
+            dates.extend(self['timeline'][0:4])
+            dates.append(self['timeline'][-1])
+        else:
+            dates.extend(self['timeline'])
+
+        timeline_row = ', '.join(dates[0:-1]) + ' ... ' + dates[-1]
+
+
         html =  '''\
 <table border="1" class="coverage">
     <thead>
-        <tr style="text-align: right;">
-            <th colspan="2"><b>Coverage:</b></th>
+        <tr style="text-align: center;">
+            <th colspan="2"><b>Coverage: {name}</b></th>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td>description</td>
-            <td>...</td>
+            <td><b>Description</b></td>
+            <td>{description}</td>
         </tr>
         <tr>
-            <td>attributes</td>
-            <td>...</td>
+            <td><b>Attributes</b></td>
+            <td>
+                <table border="1" class="coverage" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>name</th>
+                            <th>description</th>
+                            <th>datatype</th>
+                            <th>valid range</th>
+                            <th>scale</th>
+                            <th>nodata</th>
+                        </tr>
+                    </thead>
+                    {attributes}
+                </table>
+            </td>
         </tr>
         <tr>
-            <td>spatial_extent</td>
-            <td>...</td>
+            <td>Extent</td>
+            <td>{spatial_extent}</td>
         </tr>
         <tr>
-            <td>timeline</td>
-            <td>...</td>
+            <td>Timeline</td>
+            <td>{timeline}</td>
         </tr>
     </tbody>
-</table>'''
+</table>'''.format(name=self['name'],
+                   description=self['description'],
+                   attributes=''.join(attr_rows),
+                   spatial_extent=spatial_extent_row,
+                   timeline=timeline_row)
 
         return html

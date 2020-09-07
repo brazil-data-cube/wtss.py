@@ -35,17 +35,15 @@ class Coverage(dict):
         """Customize how the REPL pretty-prints WTSS."""
         return self._repr_html_()
 
-
     def _repr_html_(self):
         """Display the coverage metadata as HTML.
 
         This integrates a rich display in IPython.
         """
-        # attributes are displayed in nested table
         attr_rows = []
 
         for attr in self['attributes']:
-            att_row_html = f'''
+            att_row_html = f'''\
 <tr>
     <td>{attr["name"]}</td>
     <td>{attr["description"]}</td>
@@ -54,73 +52,53 @@ class Coverage(dict):
     <td>{attr["scale_factor"]}</td>
     <td>{attr["missing_value"]}</td>
 </tr>'''
+
             attr_rows.append(att_row_html)
 
-        # the spatial extent is show in nested table
-        spatial_extent_row = f'''
-<table border="1" class="coverage" style="width: 100%;">
-    <thead>
-        <tr>
-            <th>xmin</th>
-            <th>ymin</th>
-            <th>xmax</th>
-            <th>ymax</th>
-        </tr>
-    </thead>
-    <tr>
-        <td>{self["spatial_extent"]["xmin"]}</td>
-        <td>{self["spatial_extent"]["ymin"]}</td>
-        <td>{self["spatial_extent"]["xmax"]}</td>
-        <td>{self["spatial_extent"]["ymax"]}</td>
-    </tr>
-</table>
+        # shows timeline in a list
+        timeline_htlm = '''\
+<select id="timeline" size="10">
 '''
 
-        # the timeline hides some values
-        dates = []
+        timeline_options = [f'<option value="{d}">{d}</option>' for d in self['timeline']]
 
-        if len(self['timeline']) > 5:
-            dates.extend(self['timeline'][0:4])
-            dates.append(self['timeline'][-1])
-        else:
-            dates.extend(self['timeline'])
+        timeline_htlm += ''.join(timeline_options) + '</select>'
 
-        timeline_row = ', '.join(dates[0:-1]) + ' ... ' + dates[-1]
-
-
-        html =  '''\
-<table border="1" class="coverage">
+        html = '''\
+<table>
     <thead>
-        <tr style="text-align: left;">
-            <th colspan="2"><b>Coverage: {name}</b></th>
+        <tr>
+           <th>Coverage</th>
+           <td colspan="6">{name}</td>
         </tr>
     </thead>
     <tbody>
         <tr>
-            <td><b>Description</b></td>
-            <td>{description}</td>
+            <th>Description</th>
+            <td colspan="6">{description}</td>
         </tr>
         <tr>
-            <td><b>Attributes</b></td>
-            <td>
-                <table border="1" class="coverage" style="width: 100%;">
-                    <thead>
-                        <tr>
-                            <th>name</th>
-                            <th>description</th>
-                            <th>datatype</th>
-                            <th>valid range</th>
-                            <th>scale</th>
-                            <th>nodata</th>
-                        </tr>
-                    </thead>
-                    {attributes}
-                </table>
-            </td>
+            <th rowspan="{nattrs}">Attributes</th>
+            <th>name</th>
+            <th>description</th>
+            <th>datatype</th>
+            <th>valid range</th>
+            <th>scale</th>
+            <th>nodata</th>
+        </tr>
+        {attributes}
+        <tr>
+            <th rowspan="2">Extent</th>
+            <th>xmin</th>
+            <th>ymin</th>
+            <th>xmax</th>
+            <th colspan="3">ymax</th>
         </tr>
         <tr>
-            <td>Extent</td>
-            <td>{spatial_extent}</td>
+            <td>{xmin}</td>
+            <td>{ymin}</td>
+            <td>{xmax}</td>
+            <td colspan="3">{ymax}</td>
         </tr>
         <tr>
             <td>Timeline</td>
@@ -130,7 +108,8 @@ class Coverage(dict):
 </table>'''.format(name=self['name'],
                    description=self['description'],
                    attributes=''.join(attr_rows),
-                   spatial_extent=spatial_extent_row,
-                   timeline=timeline_row)
+                   nattrs=len(attr_rows) + 1,
+                   timeline=timeline_htlm,
+                   **self['spatial_extent'])
 
         return html

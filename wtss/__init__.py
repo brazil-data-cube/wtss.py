@@ -8,6 +8,10 @@
 
 """Python Client Library for WTSS."""
 
+from .wtss import wtss
 from .version import __version__
 
-__all__ = ('__version__', )
+__all__ = (
+    '__version__',
+    'wtss',
+)

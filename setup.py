@@ -20,7 +20,6 @@ docs_require = [
     'Sphinx>=2.2',
     'sphinx_rtd_theme',
     'sphinx-copybutton',
-    'sphinx-tabs',
 ]
 
 tests_require = [
@@ -31,12 +30,17 @@ tests_require = [
     'pytest-pep8>=1.0',
     'pydocstyle>=4.0',
     'isort>4.3',
-    'check-manifest>=0.40'
+    'check-manifest>=0.40',
+]
+
+examples_require = [
+    'matplotlib>=3.1',
+    'numpy>=1.18',
 ]
 
 extras_require = {
     'docs': docs_require,
-    'oauth': ['requests_oauthlib>=1.3'],
+    'examples': examples_require,
     'tests': tests_require,
 }
 

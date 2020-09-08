@@ -55,6 +55,7 @@ class wtss:
         self._validate = validate
         self._access_token = access_token
 
+
     @property
     def coverages(self):
         """Return a list of coverage names.
@@ -83,6 +84,7 @@ class wtss:
 
         return result['coverages']
 
+
     def _describe_coverage(self, name):
         """Get coverage metadata for the given coverage identified by its name.
 
@@ -101,6 +103,7 @@ class wtss:
                        params={'name': name})
 
         return cv
+
 
     def _time_series(self, **kwargs):
         """Retrieve the time series for a given location.
@@ -121,6 +124,7 @@ class wtss:
 
         return ts
 
+
     def __getitem__(self, key):
         """Get coverage whose name is identified by the key.
 
@@ -134,6 +138,7 @@ class wtss:
         cv_meta = self._describe_coverage(key)
 
         return Coverage(service=self, metadata=cv_meta)
+
 
     def __getattr__(self, name):
         """Get coverage identified by name.
@@ -150,6 +155,7 @@ class wtss:
         except:
             raise AttributeError(f'No attributed name "{name}"')
 
+
     def __iter__(self):
         """Iterate over coverages available in the service.
 
@@ -161,11 +167,13 @@ class wtss:
         for cv_name in coverages:
             yield self[cv_name]
 
+
     def __str__(self):
         """Return the string representation of the WTSS object."""
         text = f'WTSS:\n\tURL: {self._url}'
 
         return text
+
 
     def __repr__(self):
         """Return the WTSS object representation."""
@@ -174,6 +182,7 @@ class wtss:
                f'access_token={self._access_token})'
 
         return text
+
 
     def _ipython_key_completions_(self):
         """Integrate key completions for WTSS in IPython.
@@ -186,6 +195,7 @@ class wtss:
             ValueError: If the response body is not a json document.
         """
         return self._list_coverages()
+
 
     def _repr_html_(self):
         """Display the WTSS object as HTML.
@@ -210,6 +220,7 @@ class wtss:
 </ul>'''
 
         return html
+
 
     @staticmethod
     def _get(url, op, params=None):

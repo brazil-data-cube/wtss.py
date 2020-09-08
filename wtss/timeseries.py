@@ -44,7 +44,13 @@ class TimeSeries(dict):
             setattr(self, attr['attribute'], attr['values'])
 
     def plot(self):
-        """Plot the time series on a chart."""
+        """Plot the time series on a chart.
+
+        .. note::
+
+            You should have Matplotlib and Numpy installed.
+            See ``wtss.py`` install notes for more information.
+        """
         try:
             import matplotlib.pyplot as plt
             import numpy as np

@@ -6,17 +6,12 @@
     under the terms of the MIT License; see LICENSE file for more details.
 
 
-WTSS API
-========
+Coverage
+--------
 
 
-.. automodule:: wtss.wtss
+.. autoclass:: wtss.coverage.Coverage
+    :members:
+    :private-members:
 
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Classes:
-
-    class_wtss
-    class_coverage
-    class_timeseries
+    .. automethod:: __init__

@@ -8,7 +8,6 @@
 
 """A class that represents a coverage in WTSS."""
 
-
 class Coverage(dict):
     """A class that describes a coverage in WTSS.
 
@@ -21,19 +20,37 @@ class Coverage(dict):
             used by the coverage object.
     """
 
-    def __init__(self, service, metadata):
+    def __init__(self, service, metadata=None):
         """Create a coverage object associated to a WTSS client.
 
         Args:
             service (wtss): The client to be used by the coverage object.
+            metadata (dict): The coverage metadata.
         """
         self._service = service
-
         super(Coverage, self).__init__(metadata or {})
+
+
+    def __str__(self):
+        """Return the string representation of the Coverage object."""
+        text = f'Coverage: {self["name"]}'
+
+        return text
+
+
+    def __repr__(self):
+        """Return the Coverage object representation."""
+        wtss_repr = repr(self._service)
+
+        text = f'Coverage(service={wtss_repr}, metadata={super().__repr__()}'
+
+        return text
+
 
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints WTSS."""
         return self._repr_html_()
+
 
     def _repr_html_(self):
         """Display the coverage metadata as HTML.

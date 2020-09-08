@@ -8,6 +8,9 @@
 
 """A class that represents a coverage in WTSS."""
 
+from .timeseries import TimeSeries
+
+
 class Coverage(dict):
     """A class that describes a coverage in WTSS.
 
@@ -29,6 +32,45 @@ class Coverage(dict):
         """
         self._service = service
         super(Coverage, self).__init__(metadata or {})
+
+
+    def ts(self, **kwargs):
+        """Retrieve the time series for a given location.
+
+        Args:
+            **kwargs: Keyword arguments.
+
+        Returns:
+            TimeSeries: A time series object as a dictionary.
+
+        Raises:
+            HTTPError: If the server response indicates an error.
+            ValueError: If the response body is not a json document.
+        """
+        if 'attributes' not in kwargs:
+            raise ValueError("Missing coverage attributes.")
+
+        if type(kwargs['attributes']) in [list, tuple]:
+            kwargs['attributes'] = ",".join(kwargs['attributes'])
+
+        if ('latitude' not in kwargs) or ('longitude' not in kwargs):
+            raise ValueError("Arguments latitude and longitude are mandatory.")
+
+        latitude = kwargs['latitude']
+        longitude = kwargs['latitude']
+
+        if (type(latitude) not in (float, int)) or (type(longitude) not in (float, int)):
+            raise ValueError("Arguments latitude and longitude must be numeric.")
+
+        if (kwargs['latitude'] < -90.0) or (kwargs['latitude'] > 90.0):
+            raise ValueError('latitude is out-of range!')
+
+        if (kwargs['longitude'] < -180.0) or (kwargs['longitude'] > 180.0):
+            raise ValueError('longitude is out-of range!')
+
+        data = self._service._time_series(coverage=self['name'], **kwargs)
+
+        return TimeSeries(self, data)
 
 
     def __str__(self):

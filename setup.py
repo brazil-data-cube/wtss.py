@@ -42,6 +42,7 @@ extras_require = {
     'docs': docs_require,
     'examples': examples_require,
     'tests': tests_require,
+    'matplotlib': ['numpy', 'matplotlib']
 }
 
 extras_require['all'] = [req for _, reqs in extras_require.items() for req in reqs]

@@ -8,6 +8,8 @@
 
 """A class that represents a Time Series in WTSS."""
 
+from datetime import datetime
+
 
 class TimeSeries(dict):
     """A class that represents a time series in WTSS.
@@ -30,6 +32,23 @@ class TimeSeries(dict):
 
         super(TimeSeries, self).__init__(data or {})
 
+        # update timeline with datetime type
+        tl = data["result"]["timeline"]
+
+        self['result']['timeline'] =  self._timeline(tl, '%Y-%m-%d')
+
+        # add coverage attributes in object keys
+        attrs = self['result']['attributes']
+
+        for attr in attrs:
+            setattr(self, attr['attribute'], attr['values'])
+
+
+    @property
+    def timeline(self):
+        return self['result']['timeline']
+
+
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints a time series."""
         return 'TimeSeries:'
@@ -41,3 +60,19 @@ class TimeSeries(dict):
         This integrates a rich display in IPython.
         """
         return '<h1>TimeSeries:</h1>'
+
+
+    @staticmethod
+    def _timeline(tl, fmt):
+        """Convert a timeline from a string list to a Python datetime list.
+
+        Args:
+            tl (list): a list of strings from a time_series JSON document response.
+            fmt (str): the format date (e.g. `"%Y-%m-%d`").
+
+        Returns:
+            list (datetime): a timeline with datetime values.
+        """
+        date_timeline = [datetime.strptime(t, fmt).date() for t in tl]
+
+        return date_timeline

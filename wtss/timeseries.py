@@ -43,6 +43,52 @@ class TimeSeries(dict):
         for attr in attrs:
             setattr(self, attr['attribute'], attr['values'])
 
+    def plot(self):
+        """Plot the time series on a chart.
+
+        .. note::
+
+            You should have Matplotlib and Numpy installed.
+            See ``wtss.py`` install notes for more information.
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+        except:
+            raise ImportError('You should install Matplotlib and Numpy!')
+
+        fig, ax = plt.subplots()
+
+        plt.title(f'Coverage {self._coverage["name"]}', fontsize=24)
+
+        plt.xlabel('Date', fontsize=16)
+        plt.ylabel('Surface Reflectance', fontsize=16)
+
+        x = [str(date) for date in self.timeline]
+
+        plt.xticks(np.linspace(0, len(x), num=10))
+
+        attrs = self['result']['attributes']
+
+        for attr in attrs:
+            attr_name = attr['attribute']
+
+            y = attr['values']
+
+            ax.plot(x, y,
+                    ls='-',
+                    marker='o',
+                    linewidth=1.0,
+                    label=attr_name)
+
+        plt.legend()
+
+        plt.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
+
+        fig.autofmt_xdate()
+
+        plt.show()
+
 
     @property
     def timeline(self):

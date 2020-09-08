@@ -17,16 +17,16 @@
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Documentation:
+    :maxdepth: 1
+    :caption: Documentation:
 
-   installation
-   usage
-   api
+    installation
+    usage
+    api
 
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
     :caption: Additional Notes
 
     license

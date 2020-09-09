@@ -2,20 +2,20 @@ from wtss import *
 
 service = wtss('http://www.esensing.dpi.inpe.br')
 
-cv = service.MOD13Q1
+print(service.coverages)
 
-ts = cv.ts(latitude=-12,
-           longitude=-54,
-           attributes=['nir', 'red'],
-           start_date='2001-01-01',
-           end_date='2002-02-02')
+coverage = service['MOD13Q1']
 
-print(ts)
+print(coverage)
 
-print(ts.timeline)
+ts = coverage.ts(attributes=('red', 'nir'),
+                 latitude=-12.0, longitude=-54.0,
+                 start_date='2001-01-01', end_date='2001-12-31')
 
 print(ts.red)
 
 print(ts.nir)
+
+print(ts.timeline)
 
 ts.plot()

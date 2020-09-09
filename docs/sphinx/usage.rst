@@ -19,54 +19,85 @@ Import the ``wtss`` class and then use it to create an object to retrieve the ti
 
 .. code-block:: python
 
-    from wtss import wtss
+    from wtss import *
 
-    w = wtss("http://www.myserver.org")
-
-
-    cv_list = w.list_coverages()
-
-    print(cv_list)
+    service = wtss('http://www.esensing.dpi.inpe.br')
 
 
-    cv_scheme = w.describe_coverage("mod13q1_512")
-
-    print(cv_scheme)
-
-
-    ts = w.time_series("mod13q1_512", ("red", "nir"), -12.0, -54.0, "", "")
-
-    print(ts["red"])
-
-    print(ts["nir"])
-
-    print(ts.timeline)
-
-
-If you want to plot a time series, you can write a code like:
+The object ``service`` allows to list the available coverages:
 
 
 .. code-block:: python
 
-    import matplotlib.pyplot as pyplot
-    import matplotlib.dates as mdates
-    from wtss import wtss
-
-    w = wtss("http://www.myserver.org")
-
-    # retrieve the time series for location with longitude = -54, latitude =  -12
-    ts = w.time_series("mod13q1_512", "red", -12.0, -54.0, start_date="2001-01-01", end_date="2001-12-31")
-
-    fig, ax = pyplot.subplots()
-
-    ax.plot(ts.timeline, ts["red"], 'o-')
-
-    fig.autofmt_xdate()
-
-    pyplot.show()
+    print(service.coverages)
 
 
-The code snippet above will result in a chart such as:
+Result::
+
+    ['MOD13Q1', 'MOD13Q1_M']
+
+
+It also allows to retrieve a coverage object with its metadata:
+
+
+.. code-block:: python
+
+    coverage = service['MOD13Q1']
+
+    print(coverage)
+
+
+Result::
+
+    Coverage: MOD13Q1
+
+
+In order to retrieve the time series for attributes ``red`` and ``nir``, in the location of ``latitude -12`` and ``longitude -54`` from ``January 1st, 2001`` tp ``December 31st, 2001``, use the ``ts`` method:
+
+
+.. code-block:: python
+
+    ts = coverage.ts(attributes=('red', 'nir'),
+                     latitude=-12.0, longitude=-54.0,
+                     start_date='2001-01-01', end_date='2001-12-31')
+
+
+Then, you can access the time series values through the name of the attributes:
+
+
+.. code-block:: python
+
+    print('red values:', ts.red)
+
+    print('nir values:', ts.nir)
+
+
+Result::
+
+    red values: [236.0, 289.0, ..., 494.0, 1349.0]
+
+    nir values: [3463.0, 3656.0, ..., 3901.0, 2948.0]
+
+
+It is also possible to access the time points associated to the values:
+
+
+.. code-block:: python
+
+    print(ts.timeline)
+
+
+Result::
+
+    [datetime.date(2001, 1, 1), ..., datetime.date(2001, 12, 19)]
+
+
+If you have Matplotlib and Numpy, it is possible to plot the time series with the ``plot`` method:
+
+
+.. code-block:: python
+
+    ts.plot()
 
 
 .. image:: ./img/ts_plot.png

@@ -10,14 +10,22 @@ Installation
 ============
 
 
-Development installation
+Development Installation
 ------------------------
 
 
 Pre-Requirements
 ++++++++++++++++
 
-``wtss.py`` depends essentially on `Requests <https://requests.readthedocs.io/en/master/>`_. Please, read the instructions below in order to install ``wtss.py``.
+
+``wtss.py`` depends essentially on:
+
+- `Requests <https://requests.readthedocs.io/en/master/>`_: an HTTP library for Python.
+
+- `jsonschema <https://github.com/Julian/jsonschema>`_: an implementation of JSON Schema for Python.
+
+
+Please, read the instructions below in order to install ``wtss.py``.
 
 
 Clone the Software Repository

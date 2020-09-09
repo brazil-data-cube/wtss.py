@@ -32,10 +32,7 @@ The object ``service`` allows to list the available coverages:
     print(service.coverages)
 
 
-Result:
-
-
-.. code-block:: json
+Result::
 
     ['MOD13Q1', 'MOD13Q1_M']
 
@@ -75,10 +72,7 @@ Then, you can access the time series values through the name of the attributes:
     print('nir values:', ts.nir)
 
 
-Result:
-
-
-.. code-block:: json
+Result::
 
     red values: [236.0, 289.0, ..., 494.0, 1349.0]
 
@@ -93,10 +87,7 @@ It is also possible to access the time points associated to the values:
     print(ts.timeline)
 
 
-Result:
-
-
-.. code-block:: json
+Result::
 
     [datetime.date(2001, 1, 1), ..., datetime.date(2001, 12, 19)]
 

@@ -53,7 +53,16 @@ About
 **W**\ eb **T**\ ime **S**\ eries **S**\ ervice (WTSS) is a lightweight web service for handling time series data from remote sensing imagery. Given a location and a time interval you can retrieve the according time series as a Python list of real values.
 
 
-In WTSS a coverage is a three dimensional array associate to spatial and temporal reference systems.
+In WTSS a coverage is a three dimensional array associate to spatial and temporal reference systems (:numref:`Figure %s <wtss:coverage>`).
+
+
+.. figure:: https://github.com/brazil-data-cube/wtss.py/blob/master/docs/sphinx/img/image-time-series.png
+    :alt: Coverage as a three dimensional array
+    :width: 240
+    :figclass: align-center
+    :name: wtss:coverage
+
+    A coverage as a three dimensional array.
 
 
 WTSS is based on three operations:

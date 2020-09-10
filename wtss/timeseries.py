@@ -8,18 +8,13 @@
 
 """A class that represents a Time Series in WTSS."""
 
-from datetime import datetime
-
-
 class TimeSeries(dict):
     """A class that represents a time series in WTSS.
 
-    For more information about time series definition in WTSS, please,
-     refer to the `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
+    .. note::
 
-    Attributes:
-
-        _coverage (Coverage): The associated coverage.
+        For more information about time series definition, please, refer to
+        `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
     """
 
     def __init__(self, coverage, data):
@@ -28,28 +23,64 @@ class TimeSeries(dict):
         Args:
             coverage (Coverage): The coverage that this time series belongs to.
         """
+        #: Coverage: The associated coverage.
         self._coverage = coverage
 
         super(TimeSeries, self).__init__(data or {})
 
-        # update timeline with datetime type
-        tl = data["result"]["timeline"]
-
-        self['result']['timeline'] =  self._timeline(tl, '%Y-%m-%d')
-
-        # add coverage attributes in object keys
+        # add coverage attributes as object keys
         attrs = self['result']['attributes']
 
         for attr in attrs:
             setattr(self, attr['attribute'], attr['values'])
 
-    def plot(self):
+
+    @property
+    def timeline(self, as_date=False, fmt=''):
+        """Return the timeline associated to the time series."""
+        return self['result']['timeline']
+
+
+    def plot(self, **options):
         """Plot the time series on a chart.
+
+        Keyword Args:
+            attributes (sequence): A sequence like .... .
+            line_styles (sequence): ... '-'.
+            markers (sequence): ... marker='o'.
+            line_width (numeric): 1.0.
+            line_widths (sequence): .... 1.0,
+            labels (sequence): ...
+
+
+        Raises:
+            ImportError: If Maptplotlib or Numpy can no be imported.
+
+        Example:
+
+            Plot the time series of MODIS13Q1 data product:
+
+            .. doctest::
+                :skipif: True
+
+                >>> service = WTSS('http://localhost')                    # doctest: +SKIP
+                >>> coverage = service['MOD13Q1']
+                >>> ts = coverage.ts(attributes=('red', 'nir'),
+                ...                  latitude=-12.0, longitude=-54.0,
+                ...                  start_date='2001-01-01', end_date='2001-12-31')
+                ...
+                >>> ts.plot()
+
+            This will produce the following time series plot:
+
+            .. image:: ./img/ts_plot.png
+                :alt: Time Series
+                :width: 640px
 
         .. note::
 
             You should have Matplotlib and Numpy installed.
-            See ``wtss.py`` install notes for more information.
+            See :ref:`wtss.py install notes <Installation>` for more information.
         """
         try:
             import matplotlib.pyplot as plt
@@ -64,7 +95,7 @@ class TimeSeries(dict):
         plt.xlabel('Date', fontsize=16)
         plt.ylabel('Surface Reflectance', fontsize=16)
 
-        x = [str(date) for date in self.timeline]
+        x = self.timeline
 
         plt.xticks(np.linspace(0, len(x), num=10))
 
@@ -90,11 +121,6 @@ class TimeSeries(dict):
         plt.show()
 
 
-    @property
-    def timeline(self):
-        return self['result']['timeline']
-
-
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints a time series."""
         return 'TimeSeries:'
@@ -106,19 +132,3 @@ class TimeSeries(dict):
         This integrates a rich display in IPython.
         """
         return '<h1>TimeSeries:</h1>'
-
-
-    @staticmethod
-    def _timeline(tl, fmt):
-        """Convert a timeline from a string list to a Python datetime list.
-
-        Args:
-            tl (list): a list of strings from a time_series JSON document response.
-            fmt (str): the format date (e.g. `"%Y-%m-%d`").
-
-        Returns:
-            list (datetime): a timeline with datetime values.
-        """
-        date_timeline = [datetime.strptime(t, fmt).date() for t in tl]
-
-        return date_timeline

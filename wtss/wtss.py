@@ -17,13 +17,16 @@ product given the ``longitude -54.0`` and ``latitude -12.0`` in the date interva
 of ``January 1st, 2001`` and ``December 31st, 2003``:
 
 
-    >>> from wtss import *
-    >>> service = wtss('http://localhost')
-    >>> for cv in service:
-    ...     print(cv)
-    ...
-    {'name': ...}
-    ...
+    .. doctest::
+        :skipif: True
+
+        >>> from wtss import *
+        >>> service = WTSS('http://localhost')
+        >>> for cv in service:
+        ...     print(cv)
+        ...
+        {'name': ...}
+        ...
 """
 
 import requests
@@ -147,9 +150,12 @@ class WTSS:
 
             Get a coverage object named ``MOD13Q1``:
 
-            >>> from wtss import *
-            >>> service = wtss('http://localhost')
-            >>> service['MOD13Q1']
+            .. doctest::
+                :skipif: True
+
+                >>> from wtss import *
+                >>> service = WTSS('http://localhost')
+                >>> service['MOD13Q1']
         """
         cv_meta = self._describe_coverage(key)
 
@@ -170,9 +176,12 @@ class WTSS:
 
             Get a coverage object named ``MOD13Q1``:
 
-            >>> from wtss import *
-            >>> service = wtss('http://localhost')
-            >>> service.MOD13Q1
+            .. doctest::
+                :skipif: True
+
+                >>> from wtss import *
+                >>> service = WTSS('http://localhost')
+                >>> service.MOD13Q1
         """
         try:
             return self[name]

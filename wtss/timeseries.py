@@ -60,13 +60,16 @@ class TimeSeries(dict):
 
             Plot the time series of MODIS13Q1 data product:
 
-            >>> service = WTSS('http://localhost')
-            >>> coverage = service['MOD13Q1']
-            >>> ts = coverage.ts(attributes=('red', 'nir'),
-            ...                  latitude=-12.0, longitude=-54.0,
-            ...                  start_date='2001-01-01', end_date='2001-12-31')
-            ...
-            >>> ts.plot()
+            .. doctest::
+                :skipif: True
+
+                >>> service = WTSS('http://localhost')                    # doctest: +SKIP
+                >>> coverage = service['MOD13Q1']
+                >>> ts = coverage.ts(attributes=('red', 'nir'),
+                ...                  latitude=-12.0, longitude=-54.0,
+                ...                  start_date='2001-01-01', end_date='2001-12-31')
+                ...
+                >>> ts.plot()
 
             This will produce the following time series plot:
 

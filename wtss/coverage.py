@@ -105,14 +105,17 @@ class Coverage(dict):
 
             Retrieves a time series for MODIS13Q1 data product:
 
-            >>> service = WTSS('http://localhost')
-            >>> coverage = service['MOD13Q1']
-            >>> ts = coverage.ts(attributes=('red', 'nir'),
-            ...                  latitude=-12.0, longitude=-54.0,
-            ...                  start_date='2001-01-01', end_date='2001-12-31')
-            ...
-            >>> ts.red
-            [236.0, 289.0, ..., 494.0, 1349.0]
+            .. doctest::
+                :skipif: True
+
+                >>> service = WTSS('http://localhost')
+                >>> coverage = service['MOD13Q1']
+                >>> ts = coverage.ts(attributes=('red', 'nir'),
+                ...                  latitude=-12.0, longitude=-54.0,
+                ...                  start_date='2001-01-01', end_date='2001-12-31')
+                ...
+                >>> ts.red
+                [236.0, 289.0, ..., 494.0, 1349.0]
         """
         attributes = options['attributes'] \
                         if 'attributes' in options \

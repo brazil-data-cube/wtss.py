@@ -21,7 +21,7 @@ Import the ``wtss`` class and then use it to create an object to retrieve the ti
 
     from wtss import *
 
-    service = wtss('http://www.esensing.dpi.inpe.br')
+    service = WTSS('http://www.esensing.dpi.inpe.br')
 
 
 The object ``service`` allows to list the available coverages:

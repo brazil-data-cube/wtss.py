@@ -10,8 +10,7 @@ TimeSeries
 ----------
 
 
-.. autoclass:: wtss.timeseries.TimeSeries
+.. autoclass:: wtss.timeseries::TimeSeries
     :members:
-    :private-members:
-
-    .. automethod:: __init__
+    :special-members: __init__
+    :member-order: bysource

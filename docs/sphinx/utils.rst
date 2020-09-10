@@ -6,18 +6,8 @@
     under the terms of the MIT License; see LICENSE file for more details.
 
 
-WTSS API
-========
+Utility Functions
+-----------------
 
 
-.. automodule:: wtss.wtss
-
-
-.. toctree::
-    :maxdepth: 1
-    :caption: Classes:
-
-    class_wtss
-    class_coverage
-    class_timeseries
-    utils
+.. autofunction:: wtss.utils::to_datetime

@@ -41,11 +41,12 @@ WTSS is based on three operations:
 
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :caption: Documentation:
 
     installation
     usage
+    examples
     api
 
 

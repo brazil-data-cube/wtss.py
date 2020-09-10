@@ -18,7 +18,7 @@ of ``January 1st, 2001`` and ``December 31st, 2003``:
 
 
     >>> from wtss import *
-    >>> service = wtss('http://www.esensing.dpi.inpe.br')
+    >>> service = wtss('http://localhost')
     >>> for cv in service:
     ...     print(cv)
     ...
@@ -31,16 +31,13 @@ import requests
 from .coverage import Coverage
 
 
-class wtss:
+class WTSS:
     """Implement a client for WTSS.
 
-    See https://github.com/brazil-data-cube/wtss-spec for
-    more information on WTSS.
+    .. note::
 
-    Attributes:
-        _url (str): URL for the WTSS server.
-        _validate (bool): If True the client will validate the server response.
-        _access_token (str): Authentication token to be used with the WTSS server.
+        For more information about coverage definition, please, refer to
+        `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
     """
 
     def __init__(self, url, validate=False, access_token=None):
@@ -48,11 +45,16 @@ class wtss:
 
         Args:
             url (str): URL for the WTSS server.
-            validate (bool): If True the client will validate the server response.
-            access_token (str): Authentication token to be used with the WTSS server.
+            validate (bool, optional): If True the client will validate the server response.
+            access_token (str, optional): Authentication token to be used with the WTSS server.
         """
+        #: str: URL for the WTSS server.
         self._url = url
+
+        #: bool: If True the client will validate the server response.
         self._validate = validate
+
+        #: str: Authentication token to be used with the WTSS server.
         self._access_token = access_token
 
 
@@ -80,7 +82,7 @@ class wtss:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        result = wtss._get(self._url, op='list_coverages')
+        result = WTSS._get(self._url, op='list_coverages')
 
         return result['coverages']
 
@@ -98,18 +100,24 @@ class wtss:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        cv = wtss._get(self._url,
+        cv = WTSS._get(self._url,
                        op='describe_coverage',
-                       params={'name': name})
+                       name=name)
 
         return cv
 
 
-    def _time_series(self, **kwargs):
+    def _time_series(self, **options):
         """Retrieve the time series for a given location.
 
-        Args:
-            **kwargs: Keyword arguments.
+        Keyword Args:
+            attributes (optional): A string with attribute names separated by commas,
+                or any sequence of strings. If omitted, the values for all
+                coverage attributes are retrieved.
+            longitude (int/float): A longitude value according to EPSG:4326.
+            latitude (int/float): A latitude value according to EPSG:4326.
+            start_date (:obj:`str`, optional): The begin of a time interval.
+            end_date (:obj:`str`, optional): The begin of a time interval.
 
         Returns:
             dict: A time series object as a dictionary.
@@ -118,9 +126,9 @@ class wtss:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        ts = wtss._get(self._url,
+        ts = WTSS._get(self._url,
                        op='time_series',
-                       params=kwargs)
+                       **options)
 
         return ts
 
@@ -134,6 +142,14 @@ class wtss:
         Raises:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
+
+        Example:
+
+            Get a coverage object named ``MOD13Q1``:
+
+            >>> from wtss import *
+            >>> service = wtss('http://localhost')
+            >>> service['MOD13Q1']
         """
         cv_meta = self._describe_coverage(key)
 
@@ -149,11 +165,19 @@ class wtss:
         Raises:
             AttributeError: If a coverage with the given name doesn't exist
                 or could not be retrieved.
+
+        Example:
+
+            Get a coverage object named ``MOD13Q1``:
+
+            >>> from wtss import *
+            >>> service = wtss('http://localhost')
+            >>> service.MOD13Q1
         """
         try:
             return self[name]
         except:
-            raise AttributeError(f'No attributed name "{name}"')
+            raise AttributeError(f'No attribute named "{name}"')
 
 
     def __iter__(self):
@@ -162,9 +186,7 @@ class wtss:
         Returns:
             A coverage at each iteration.
         """
-        coverages = self._list_coverages()
-
-        for cv_name in coverages:
+        for cv_name in self.coverages:
             yield self[cv_name]
 
 
@@ -223,14 +245,14 @@ class wtss:
 
 
     @staticmethod
-    def _get(url, op, params=None):
+    def _get(url, op, **params):
         """Query the WTSS service using HTTP GET verb and return the result as a JSON document.
 
         Args:
             url (str): URL for the WTSS server.
             op (str): WTSS operation.
             params (dict): Dictionary, list of tuples or bytes to send
-                in the query string for the underlying `Requests`.
+                in the query string for the underlying ``Requests``.
 
         Returns:
             A JSON document.

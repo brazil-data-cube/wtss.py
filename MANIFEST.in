@@ -14,9 +14,12 @@ include LICENSE
 include pytest.ini
 recursive-exclude docs/sphinx/_build *
 recursive-include wtss *.py
+recursive-include docs/sphinx *.bat
+recursive-include docs/sphinx *.css
 recursive-include docs/sphinx *.ico
 recursive-include docs/sphinx *.png
 recursive-include docs/sphinx *.py
 recursive-include docs/sphinx *.rst
 recursive-include docs/sphinx Makefile
-recursive-include tests *.py
+recursive-include examples *.ipynb
+recursive-include examples *.py

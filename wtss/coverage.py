@@ -14,31 +14,84 @@ from .timeseries import TimeSeries
 class Coverage(dict):
     """A class that describes a coverage in WTSS.
 
-    For more information about coverage definition, please, refer to
-    `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
+    .. note::
 
-    Attributes:
-
-        _service (wtss): The associated WTSS client to be
-            used by the coverage object.
+        For more information about coverage definition, please, refer to
+        `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
     """
 
     def __init__(self, service, metadata=None):
         """Create a coverage object associated to a WTSS client.
 
         Args:
-            service (wtss): The client to be used by the coverage object.
+            service (wtss.wtss.WTSS): The client to be used by the coverage object.
             metadata (dict): The coverage metadata.
         """
+        #: WTSS: The associated WTSS client to be used by the coverage object.
         self._service = service
+
         super(Coverage, self).__init__(metadata or {})
 
 
-    def ts(self, **kwargs):
-        """Retrieve the time series for a given location.
+    @property
+    def attributes(self):
+        """Return the list of coverage attributes."""
+        return self['attributes']
 
-        Args:
-            **kwargs: Keyword arguments.
+
+    @property
+    def crs(self):
+        """Return the coordinate reference system metadata."""
+        return self['crs']
+
+
+    @property
+    def description(self):
+        """Return the coverage description."""
+        return self['description']
+
+
+    @property
+    def dimensions(self):
+        """Return the coverage dimensions metadata."""
+        return self['dimensions']
+
+
+    @property
+    def name(self):
+        """Return the coverage name."""
+        return self['name']
+
+
+    @property
+    def spatial_extent(self):
+        """Return the coverage spatial extent."""
+        return self['spatial_extent']
+
+
+    @property
+    def spatial_resolution(self):
+        """Return the coverage spatial resolution metadata."""
+        return self['spatial_resolution']
+
+
+    @property
+    def timeline(self):
+        """Return the coverage timeline."""
+        return self['timeline']
+
+
+    def ts(self, **options):
+        """Retrieve the time series for a given location and time interval.
+
+        Keyword Args:
+            attributes (optional): A string with attribute names separated by commas,
+                or any sequence of strings. If omitted, the values for all
+                coverage attributes are retrieved.
+            longitude (int/float): A longitude value according to EPSG:4326.
+            latitude (int/float): A latitude value according to EPSG:4326.
+            start_date (:obj:`str`, optional): The begin of a time interval.
+            end_date (:obj:`str`, optional): The begin of a time interval.
 
         Returns:
             TimeSeries: A time series object as a dictionary.
@@ -46,29 +99,50 @@ class Coverage(dict):
         Raises:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
+            ImportError: If Maptplotlib or Numpy can no be imported.
+
+        Example:
+
+            Retrieves a time series for MODIS13Q1 data product:
+
+            >>> service = WTSS('http://localhost')
+            >>> coverage = service['MOD13Q1']
+            >>> ts = coverage.ts(attributes=('red', 'nir'),
+            ...                  latitude=-12.0, longitude=-54.0,
+            ...                  start_date='2001-01-01', end_date='2001-12-31')
+            ...
+            >>> ts.red
+            [236.0, 289.0, ..., 494.0, 1349.0]
         """
-        if 'attributes' not in kwargs:
-            raise ValueError("Missing coverage attributes.")
+        attributes = options['attributes'] \
+                        if 'attributes' in options \
+                            else [attr['name'] for attr in self.attributes]
 
-        if type(kwargs['attributes']) in [list, tuple]:
-            kwargs['attributes'] = ",".join(kwargs['attributes'])
+        if not isinstance(attributes, str):
+            attributes = ','.join(attributes)
 
-        if ('latitude' not in kwargs) or ('longitude' not in kwargs):
+        if ('latitude' not in options) or ('longitude' not in options):
             raise ValueError("Arguments latitude and longitude are mandatory.")
 
-        latitude = kwargs['latitude']
-        longitude = kwargs['latitude']
+        latitude = options['latitude']
+        longitude = options['longitude']
 
         if (type(latitude) not in (float, int)) or (type(longitude) not in (float, int)):
             raise ValueError("Arguments latitude and longitude must be numeric.")
 
-        if (kwargs['latitude'] < -90.0) or (kwargs['latitude'] > 90.0):
-            raise ValueError('latitude is out-of range!')
+        if (latitude < -90.0) or (latitude > 90.0):
+            raise ValueError('latitude is out-of range [-90,90]!')
 
-        if (kwargs['longitude'] < -180.0) or (kwargs['longitude'] > 180.0):
-            raise ValueError('longitude is out-of range!')
+        if (longitude < -180.0) or (longitude > 180.0):
+            raise ValueError('longitude is out-of range [-180,180]!')
 
-        data = self._service._time_series(coverage=self['name'], **kwargs)
+        start_date = options['start_date'] if ('start_date' in options) else self.timeline[0]
+
+        end_date = options['end_date'] if ('end_date' in options) else self.timeline[-1]
+
+        data = self._service._time_series(coverage=self.name, attributes=attributes,
+                                          longitude=longitude, latitude=latitude,
+                                          start_date=start_date, end_date=end_date)
 
         return TimeSeries(self, data)
 

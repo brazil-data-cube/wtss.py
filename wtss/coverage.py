@@ -118,7 +118,7 @@ class Coverage(dict):
                 [236.0, 289.0, ..., 494.0, 1349.0]
         """
         attributes = options['attributes'] \
-                        if 'attributes' in options \
+                        if 'attributes' in options and options['attributes'] \
                             else [attr['name'] for attr in self.attributes]
 
         if not isinstance(attributes, str):

@@ -41,6 +41,19 @@ class TimeSeries(dict):
         return self['result']['timeline']
 
 
+    @property
+    def attributes(self):
+        """Return a list with attribute names."""
+        attributes = [attr['attribute'] for attr in self['result']['attributes']]
+
+        return attributes
+
+
+    def values(self, attr_name):
+        """Return the time series for the given attribute."""
+        return getattr(self, attr_name)
+
+
     def plot(self, **options):
         """Plot the time series on a chart.
 

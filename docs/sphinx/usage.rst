@@ -105,7 +105,7 @@ If you have Matplotlib and Numpy, it is possible to plot the time series with th
         :width: 640px
 
 
-More examples can be found in the `examples directory <https://github.com/brazil-data-cube/wtss.py/tree/master/examples>`_.
+More examples can be found in the :ref:`Section Examples <Examples>`.
 
 
 Command-Line Interface (CLI)

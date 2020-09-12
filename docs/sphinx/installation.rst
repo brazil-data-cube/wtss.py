@@ -12,22 +12,40 @@ Installation
 ============
 
 
-Development Installation
-------------------------
-
-
 Pre-Requirements
-++++++++++++++++
+----------------
 
 
 ``wtss.py`` depends essentially on:
 
 - `Requests <https://requests.readthedocs.io/en/master/>`_: an HTTP library for Python.
 
-- `jsonschema <https://github.com/Julian/jsonschema>`_: an implementation of JSON Schema for Python.
+- `jsonschema <https://github.com/Julian/jsonschema>`_: an implementation of JSON Schema for Python. It is used to validate WTSS server responses.
+
+- `Click <https://click.palletsprojects.com/en/7.x/>`_: a Python package for creating beautiful command line interfaces.
 
 
 Please, read the instructions below in order to install ``wtss.py``.
+
+
+Built Distributions
+-------------------
+
+
+Linux, macOS, and Windows users can get ``wtss`` from the `Python Package Index <https://pypi.org/project/wtss/>`_ with a recent version of ``pip``::
+
+    pip install wtss
+
+
+.. note::
+
+    If you want to install the Matplotlib support, use the following command::
+
+        pip install wtss[matplotlib]
+
+
+Development Installation - GitHub
+---------------------------------
 
 
 Clone the Software Repository
@@ -80,7 +98,7 @@ Run the Tests
 
 .. code-block:: shell
 
-    ./run-tests.sh
+     WTSS_TEST_URL="http://your-server" ./run-tests.sh
 
 
 Build the Documentation

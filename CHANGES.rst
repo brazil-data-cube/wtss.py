@@ -10,12 +10,13 @@ Changes
 =======
 
 
-Version 0.7.0
--------------
+Version 0.7.0-0
+---------------
 
 
 Released 2020-09-11
 
+- Basic integration with Jupyter Environment and Matplotlib.
 
 - Command Line Interface (CLI).
 
@@ -29,7 +30,7 @@ Released 2020-09-11
 
 - Installation and usage instructions.
 
-- Travis CI support.
+- Travis CI support and PyPI deploy.
 
 - Unit-test environment set.
 

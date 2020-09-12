@@ -48,6 +48,8 @@ WTSS is based on three operations:
     usage
     examples
     api
+    repository
+    history
 
 
 .. toctree::

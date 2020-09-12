@@ -14,6 +14,7 @@ from .wtss import WTSS
 
 
 @click.group()
+@click.version_option()
 def cli():
     """Database commands.
 

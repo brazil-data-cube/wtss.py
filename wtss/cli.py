@@ -80,7 +80,12 @@ def describe(verbose, url, coverage):
               help='Latitude in EPSG:4326')
 @click.option('--longitude', required=True, type=float,
               help='Longitude in EPSG:4326')
-def ts(verbose, url, coverage, attributes, latitude, longitude):
+@click.option('--start-date', required=False, type=str,
+              help='Start date')
+@click.option('--end-date', required=False, type=str,
+              help='End date')
+def ts(verbose, url, coverage, attributes,
+       latitude, longitude, start_date, end_date):
     """Retrieve the coverage metadata."""
     if verbose:
         click.secho(f'Server: {url}', bold=True, fg='black')
@@ -92,10 +97,12 @@ def ts(verbose, url, coverage, attributes, latitude, longitude):
     cv = service[coverage]
 
     ts = cv.ts(latitude=latitude, longitude=longitude,
-               attributes=attributes)
+               attributes=attributes, start_date=start_date, end_date=end_date)
 
     for attr in ts.attributes:
         click.secho(f'\t{attr}: {ts.values(attr)}')
+
+    click.secho(f'\ttimeline: {ts.timeline}')
 
     if verbose:
         click.secho('\tFinished!', bold=False, fg='black')

@@ -69,6 +69,7 @@ setup(
     version=version,
     description=__doc__,
     long_description=readme + '\n\n' + history,
+    long_description_content_type = 'text/x-rst',
     keywords=['Web Time Series Service', 'Time series', 'Earth Observations'],
     license='MIT',
     author='Brazil Data Cube Team',

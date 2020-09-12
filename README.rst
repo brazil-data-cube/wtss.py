@@ -56,7 +56,7 @@ About
 In WTSS a coverage is a three dimensional array associate to spatial and temporal reference systems.
 
 
-.. image:: https://github.com/brazil-data-cube/wtss.py/blob/master/docs/sphinx/img/image-time-series.png
+.. image:: https://raw.githubusercontent.com/brazil-data-cube/wtss.py/master/docs/sphinx/img/image-time-series.png
     :target: https://github.com/brazil-data-cube/wtss.py/blob/master/docs/sphinx/img/image-time-series.png
     :width: 240
     :alt: Coverage as a three dimensional array
@@ -74,22 +74,9 @@ WTSS is based on three operations:
 If you want to know more about WTSS service, please, take a look at its `specification <https://github.com/brazil-data-cube/wtss-spec>`_.
 
 
-Installation
-============
-
-
-See `INSTALL.rst <./INSTALL.rst>`_.
-
-
-Repository Organization
-=======================
-
-
-See `REPOSITORY.rst <REPOSITORY.rst>`_.
-
-
 Documentation
 =============
+
 
 See https://wtss.readthedocs.io/en/latest/.
 

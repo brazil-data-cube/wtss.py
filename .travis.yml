@@ -21,6 +21,9 @@ git:
 branches:
     only:
         - master
+        - b-0.7.0
+        - b-0.8.0
+        - b-1.0.0
 
 dist: bionic
 
@@ -42,3 +45,14 @@ script:
 
 after_success:
     - coveralls
+
+deploy:
+    provider: pypi
+    username: $PYPI_USERNAME
+    password: $PYPI_PASSWORD
+    server: $PYPI_SERVER
+    distributions: "sdist"
+    edge: true
+    skip_existing: true
+    on:
+        tags: true

@@ -112,9 +112,64 @@ Command-Line Interface (CLI)
 ----------------------------
 
 
-The ``WTSS`` client installs a command line tool named ``wtss`` that allows to retrive time series data:
-
-- **UNDER DEVELOPMENT**
+The ``WTSS`` client installs a command line tool named ``wtss`` that allows to retrive time series data.
 
 
-.. .. automodule:: wtss.cli
+If you want to know the WTSS version, use the option ``--version`` as in::
+
+    wtss --version
+
+
+Output::
+
+    wtss, version 0.7.0.post0
+
+
+To list the available coverages in a service, use the ``list-coverages`` command and provides a URL to the ``--url`` option::
+
+    wtss list-coverages --url http://localhost
+
+
+Output::
+
+    MOD13Q1
+    MOD13Q1_M
+
+
+To get more information about a specific coverage, use the ``describe`` command::
+
+    wtss describe --coverage MOD13Q1 --url localhost
+
+
+Output:
+
+
+.. code-block:: json
+
+    {
+        "name": "MOD13Q1",
+        "description": "Vegetation Indices 16-Day L3 Global 250m",
+        "detail": "https://lpdaac.usgs.gov/dataset_discovery/modis/modis_products_table/mod13q1_v006",
+        "dimensions": { },
+        "spatial_extent": { },
+        "spatial_resolution": { },
+        "crs": { },
+        "timeline": [ ],
+        "attributes": [ ]
+    }
+
+
+Finally, to retrieve the time series over a coverage in a specific location::
+
+    wtss ts --coverage MOD13Q1 \
+            --attributes red \
+            --longitude -54 --latitude -12 \
+            --start-date 2001-01-01 --end-date 2001-12-31 \
+            --url http://localhost
+
+
+If you want to know more about commands and their options, use the help::
+
+    wtss --help
+
+    wtss describe --help

@@ -8,4 +8,4 @@
 
 """Version information for Python Client Library for WTSS."""
 
-__version__ = '0.7.0-1'
+__version__ = '0.7.0-0'

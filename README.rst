@@ -55,7 +55,7 @@ About
 =====
 
 
-**W**\ eb **T**\ ime **S**\ eries **S**\ ervice (WTSS) is a lightweight web service for handling time series data from remote sensing imagery. Given a location and a time interval you can retrieve the according time series as a Python list of real values.
+**W**\ eb **T**\ ime **S**\ eries **S**\ ervice (WTSS) is a lightweight web service for handling time series data from remote sensing imagery. Given a location and a time interval you can retrieve the according time series as a list of real values.
 
 
 In WTSS a coverage is a three dimensional array associate to spatial and temporal reference systems.
@@ -77,6 +77,22 @@ WTSS is based on three operations:
 
 
 If you want to know more about WTSS service, please, take a look at its `specification <https://github.com/brazil-data-cube/wtss-spec>`_.
+
+
+Installation
+============
+
+
+Linux, macOS, and Windows users can get ``wtss`` from the `Python Package Index <https://pypi.org/project/wtss/>`_ with a recent version of ``pip``::
+
+    pip install wtss
+
+
+.. note::
+
+    If you want to install the Matplotlib support, use the following command::
+
+        pip install wtss[matplotlib]
 
 
 Documentation

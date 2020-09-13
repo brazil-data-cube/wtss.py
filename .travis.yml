@@ -22,7 +22,7 @@ branches:
     only:
         - master
         - /^v\d+\.\d+\.\d+.*/
-        - /^b-\d+\.\d+\.\d+
+        - /^b-\d+\.\d+\.\d+/
 
 dist: bionic
 

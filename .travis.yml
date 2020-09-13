@@ -20,11 +20,9 @@ git:
 
 branches:
     only:
-        - /^v\d+\.\d+\.\d+.*/
         - master
-        - b-0.7.0
-        - b-0.8.0
-        - b-1.0.0
+        - /^v\d+\.\d+\.\d+.*/
+        - /^b-\d+\.\d+\.\d+
 
 dist: bionic
 

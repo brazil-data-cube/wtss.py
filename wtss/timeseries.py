@@ -137,7 +137,7 @@ class TimeSeries(dict):
 
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints a time series."""
-        return 'TimeSeries:'
+        return self._repr_html_()
 
 
     def _repr_html_(self):
@@ -145,4 +145,43 @@ class TimeSeries(dict):
 
         This integrates a rich display in IPython.
         """
-        return '<h1>TimeSeries:</h1>'
+        attr_rows = []
+
+        for attr in self['result']['attributes']:
+            attr_row = '''\
+<div>
+    <b>{attr_name}:</b> {values} 
+</div>
+'''.format(attr_name=attr['attribute'], values=attr['values'])
+
+            attr_rows.append(attr_row)
+
+        # show the timeline in a list
+        timeline_htlm = '<select id="timeline" size="10">'
+
+        timeline_options = [f'<option value="{d}">{d}</option>' for d in self.timeline]
+
+        timeline_htlm += ''.join(timeline_options) + '</select>'
+
+        html = '''\
+<div>
+    <div>
+        <b>Time Series</b> {cov_name}
+    </div>
+    </br>
+    <div>
+        {attributes}
+    </div>
+    </br>
+    <div>
+        <b>timeline</b>
+    </div>
+    <div>
+        {timeline}
+    </div>
+</div>
+'''.format(cov_name=self._coverage.name,
+           attributes=''.join(attr_rows),
+           timeline=timeline_htlm)
+
+        return html

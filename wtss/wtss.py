@@ -18,14 +18,14 @@ of ``January 1st, 2001`` and ``December 31st, 2003``:
 
 
     .. doctest::
-        :skipif: True
+        :skipif: WTSS_EXAMPLE_URL is None
 
         >>> from wtss import *
-        >>> service = WTSS('http://localhost')
+        >>> service = WTSS(WTSS_EXAMPLE_URL)
         >>> for cv in service:
         ...     print(cv)
         ...
-        {'name': ...}
+        Coverage...
         ...
 """
 
@@ -69,6 +69,7 @@ class WTSS:
             list: A list with the names of available coverages in the service.
 
         Raises:
+            ConnectionError: If the server is not reachable.
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
@@ -82,6 +83,7 @@ class WTSS:
             list: A list with the names of available coverages in the service.
 
         Raises:
+            ConnectionError: If the server is not reachable.
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
@@ -100,6 +102,7 @@ class WTSS:
             dict: The coverage metadata as a dictionary.
 
         Raises:
+            ConnectionError: If the server is not reachable.
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
@@ -126,6 +129,7 @@ class WTSS:
             dict: A time series object as a dictionary.
 
         Raises:
+            ConnectionError: If the server is not reachable.
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
@@ -143,6 +147,7 @@ class WTSS:
             Coverage: A coverage metadata object.
 
         Raises:
+            ConnectionError: If the server is not reachable.
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
 
@@ -151,11 +156,12 @@ class WTSS:
             Get a coverage object named ``MOD13Q1``:
 
             .. doctest::
-                :skipif: True
+                :skipif: WTSS_EXAMPLE_URL is None
 
                 >>> from wtss import *
-                >>> service = WTSS('http://localhost')
+                >>> service = WTSS(WTSS_EXAMPLE_URL)
                 >>> service['MOD13Q1']
+                Coverage...
         """
         cv_meta = self._describe_coverage(key)
 
@@ -177,11 +183,13 @@ class WTSS:
             Get a coverage object named ``MOD13Q1``:
 
             .. doctest::
-                :skipif: True
+                :skipif: WTSS_EXAMPLE_URL is None
 
                 >>> from wtss import *
-                >>> service = WTSS('http://localhost')
+                >>> service = WTSS(WTSS_EXAMPLE_URL)
                 >>> service.MOD13Q1
+                Coverage...
+
         """
         try:
             return self[name]
@@ -222,6 +230,7 @@ class WTSS:
             list: The list of available coverages in the service.
 
         Raises:
+            ConnectionError: If the server is not reachable.
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
@@ -267,6 +276,7 @@ class WTSS:
             A JSON document.
 
         Raises:
+            ConnectionError: If the server is not reachable.
             HTTPError: If the server response indicates an error.
             ValueError: If the response body does not contain a valid json or geojson.
         """

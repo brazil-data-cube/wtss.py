@@ -14,7 +14,7 @@ service = WTSS('http://www.esensing.dpi.inpe.br')
 
 coverage = service['MOD13Q1']
 
-ts = coverage.ts(attributes=('red', 'nir'),
+ts = coverage.ts(attributes=('red', 'nir', 'blue'),
                  latitude=-12.0, longitude=-54.0,
                  start_date='2001-01-01', end_date='2001-12-31')
 
@@ -24,4 +24,4 @@ print(ts.nir)
 
 print(ts.timeline)
 
-ts.plot()
+ts.plot(attributes=['blue'])

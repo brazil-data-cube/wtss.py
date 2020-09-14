@@ -122,6 +122,11 @@ copybutton_prompt_is_regexp = True
 #def setup(app):
 #    app.add_stylesheet('wtss.css')
 
+doctest_global_setup = '''
+import os
+
+WTSS_EXAMPLE_URL = os.getenv('WTSS_EXAMPLE_URL', None)
+'''
 
 #todo_include_todos = True
 #todo_emit_warnings = True

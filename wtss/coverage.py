@@ -206,6 +206,7 @@ class Coverage(dict):
     <div>
         <b>Coverage</b> {name}
     </div>
+    </br>
     <div>
         <b>Description</b> {description}
     </div>
@@ -248,7 +249,8 @@ class Coverage(dict):
              </tr>
         </table>
     </div>
-    <div></br>
+    </br>
+    <div>
         <b>Timeline</b>
     </div>
     <div>

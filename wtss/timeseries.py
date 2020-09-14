@@ -58,13 +58,12 @@ class TimeSeries(dict):
         """Plot the time series on a chart.
 
         Keyword Args:
-            attributes (sequence): A sequence like .... .
-            line_styles (sequence): ... '-'.
-            markers (sequence): ... marker='o'.
-            line_width (numeric): 1.0.
-            line_widths (sequence): .... 1.0,
-            labels (sequence): ...
-
+            attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
+            line_styles (sequence): Not implemented yet.
+            markers (sequence): Not implemented yet.
+            line_width (numeric): Not implemented yet.
+            line_widths (sequence): Not implemented yet,
+            labels (sequence): Not implemented yet.
 
         Raises:
             ImportError: If Maptplotlib or Numpy can no be imported.
@@ -113,18 +112,16 @@ class TimeSeries(dict):
 
         plt.xticks(np.linspace(0, len(x), num=10))
 
-        attrs = self['result']['attributes']
+        attrs = options['attributes'] if 'attributes' in options else self.attributes
 
         for attr in attrs:
-            attr_name = attr['attribute']
-
-            y = attr['values']
+            y = self.values(attr)
 
             ax.plot(x, y,
                     ls='-',
                     marker='o',
                     linewidth=1.0,
-                    label=attr_name)
+                    label=attr)
 
         plt.legend()
 
@@ -137,7 +134,7 @@ class TimeSeries(dict):
 
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints a time series."""
-        return 'TimeSeries:'
+        return self._repr_html_()
 
 
     def _repr_html_(self):
@@ -145,4 +142,43 @@ class TimeSeries(dict):
 
         This integrates a rich display in IPython.
         """
-        return '<h1>TimeSeries:</h1>'
+        attr_rows = []
+
+        for attr in self['result']['attributes']:
+            attr_row = '''\
+<div>
+    <b>{attr_name}:</b> {values} 
+</div>
+'''.format(attr_name=attr['attribute'], values=attr['values'])
+
+            attr_rows.append(attr_row)
+
+        # show the timeline in a list
+        timeline_htlm = '<select id="timeline" size="10">'
+
+        timeline_options = [f'<option value="{d}">{d}</option>' for d in self.timeline]
+
+        timeline_htlm += ''.join(timeline_options) + '</select>'
+
+        html = '''\
+<div>
+    <div>
+        <b>Time Series</b> {cov_name}
+    </div>
+    </br>
+    <div>
+        {attributes}
+    </div>
+    </br>
+    <div>
+        <b>timeline</b>
+    </div>
+    <div>
+        {timeline}
+    </div>
+</div>
+'''.format(cov_name=self._coverage.name,
+           attributes=''.join(attr_rows),
+           timeline=timeline_htlm)
+
+        return html

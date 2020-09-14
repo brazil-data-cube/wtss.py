@@ -153,9 +153,7 @@ class Coverage(dict):
 
     def __str__(self):
         """Return the string representation of the Coverage object."""
-        text = f'Coverage: {self["name"]}'
-
-        return text
+        return super().__str__()
 
 
     def __repr__(self):

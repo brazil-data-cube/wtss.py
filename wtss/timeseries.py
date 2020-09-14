@@ -58,13 +58,12 @@ class TimeSeries(dict):
         """Plot the time series on a chart.
 
         Keyword Args:
-            attributes (sequence): A sequence like .... .
-            line_styles (sequence): ... '-'.
-            markers (sequence): ... marker='o'.
-            line_width (numeric): 1.0.
-            line_widths (sequence): .... 1.0,
-            labels (sequence): ...
-
+            attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
+            line_styles (sequence): Not implemented yet.
+            markers (sequence): Not implemented yet.
+            line_width (numeric): Not implemented yet.
+            line_widths (sequence): Not implemented yet,
+            labels (sequence): Not implemented yet.
 
         Raises:
             ImportError: If Maptplotlib or Numpy can no be imported.
@@ -113,18 +112,16 @@ class TimeSeries(dict):
 
         plt.xticks(np.linspace(0, len(x), num=10))
 
-        attrs = self['result']['attributes']
+        attrs = options['attributes'] if 'attributes' in options else self.attributes
 
         for attr in attrs:
-            attr_name = attr['attribute']
-
-            y = attr['values']
+            y = self.values(attr)
 
             ax.plot(x, y,
                     ls='-',
                     marker='o',
                     linewidth=1.0,
-                    label=attr_name)
+                    label=attr)
 
         plt.legend()
 

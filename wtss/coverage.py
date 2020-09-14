@@ -106,9 +106,10 @@ class Coverage(dict):
             Retrieves a time series for MODIS13Q1 data product:
 
             .. doctest::
-                :skipif: True
+                :skipif: WTSS_EXAMPLE_URL is None
 
-                >>> service = WTSS('http://localhost')
+                >>> from wtss import *
+                >>> service = WTSS(WTSS_EXAMPLE_URL)
                 >>> coverage = service['MOD13Q1']
                 >>> ts = coverage.ts(attributes=('red', 'nir'),
                 ...                  latitude=-12.0, longitude=-54.0,
@@ -201,51 +202,64 @@ class Coverage(dict):
         timeline_htlm += ''.join(timeline_options) + '</select>'
 
         html = '''\
-<table>
-    <thead>
-        <tr>
-           <th>Coverage</th>
-           <td colspan="6">{name}</td>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <th>Description</th>
-            <td colspan="6">{description}</td>
-        </tr>
-        <tr>
-            <th rowspan="{nattrs}">Attributes</th>
-            <th>name</th>
-            <th>description</th>
-            <th>datatype</th>
-            <th>valid range</th>
-            <th>scale</th>
-            <th>nodata</th>
-        </tr>
-        {attributes}
-        <tr>
-            <th rowspan="2">Extent</th>
-            <th>xmin</th>
-            <th>ymin</th>
-            <th>xmax</th>
-            <th colspan="3">ymax</th>
-        </tr>
-        <tr>
-            <td>{xmin}</td>
-            <td>{ymin}</td>
-            <td>{xmax}</td>
-            <td colspan="3">{ymax}</td>
-        </tr>
-        <tr>
-            <th>Timeline</th>
-            <td>{timeline}</td>
-        </tr>
-    </tbody>
-</table>'''.format(name=self['name'],
-                   description=self['description'],
-                   attributes=''.join(attr_rows),
-                   nattrs=len(attr_rows) + 1,
-                   timeline=timeline_htlm,
-                   **self['spatial_extent'])
+<div>
+    <div>
+        <b>Coverage</b> {name}
+    </div>
+    </br>
+    <div>
+        <b>Description</b> {description}
+    </div>
+    </br>
+    <div>
+        <b>Attributes</b>
+    </div>
+    <div>
+        <table>
+            <tr>
+            </tr>
+            <tr>
+                <th>name</th>
+                <th>description</th>
+                <th>datatype</th>
+                <th>valid range</th>
+                <th>scale</th>
+                <th>nodata</th>
+            </tr>
+            {attributes}
+        </table>      
+    </div>
+    </br>
+    <div>
+        <b>Extent</b>
+    </div>
+    <div>
+        <table>
+            <tr>
+                <th>xmin</th>
+                <th>ymin</th>
+                <th>xmax</th>
+                <th>ymax</th>
+            </tr>
+             <tr>
+                 <td>{xmin}</td>
+                 <td>{ymin}</td>
+                 <td>{xmax}</td>
+                 <td colspan="3">{ymax}</td>
+             </tr>
+        </table>
+    </div>
+    </br>
+    <div>
+        <b>Timeline</b>
+    </div>
+    <div>
+        {timeline}
+    </div>    
+</div>'''.format(name=self['name'],
+                 description=self['description'],
+                 attributes=''.join(attr_rows),
+                 timeline=timeline_htlm,
+                 **self['spatial_extent'])
 
         return html

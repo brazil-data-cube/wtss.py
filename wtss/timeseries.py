@@ -76,7 +76,8 @@ class TimeSeries(dict):
             .. doctest::
                 :skipif: True
 
-                >>> service = WTSS('http://localhost')                    # doctest: +SKIP
+                >>> from wtss import *
+                >>> service = WTSS(WTSS_EXAMPLE_URL)
                 >>> coverage = service['MOD13Q1']
                 >>> ts = coverage.ts(attributes=('red', 'nir'),
                 ...                  latitude=-12.0, longitude=-54.0,

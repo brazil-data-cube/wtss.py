@@ -10,6 +10,22 @@ Changes
 =======
 
 
+Version 0.7.0-1
+---------------
+
+
+Released 2020-09-14
+
+
+- Improved integration with Jupyter Environment: #25.
+
+- Improved ``plot`` method for ``TimeSeries``.
+
+- Added Unit-tests.
+
+- Fixed small typos in documentation.
+
+
 Version 0.7.0-0
 ---------------
 

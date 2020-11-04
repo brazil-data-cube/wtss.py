@@ -43,7 +43,7 @@ Python Client Library for Web Time Series Service
 
 .. image:: https://img.shields.io/pypi/v/wtss
         :target: https://pypi.org/project/wtss/
-        :alt: Release
+        :alt: Python Package Index
 
 
 .. image:: https://img.shields.io/discord/689541907621085198?logo=discord&logoColor=ffffff&color=7389D8

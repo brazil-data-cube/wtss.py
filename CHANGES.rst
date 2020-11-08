@@ -14,10 +14,21 @@ Version 0.7.0-1
 ---------------
 
 
+Released 2020-11-08
+
+
+- Using Jinja 2 templates for Jupyter HTML output: `#51 <https://github.com/brazil-data-cube/wtss.py/issues/51>`_.
+
+
+
+Version 0.7.0-1
+---------------
+
+
 Released 2020-09-14
 
 
-- Improved integration with Jupyter Environment: #25.
+- Improved integration with Jupyter Environment: `#25 <https://github.com/brazil-data-cube/wtss.py/issues/25>`_.
 
 - Improved ``plot`` method for ``TimeSeries``.
 

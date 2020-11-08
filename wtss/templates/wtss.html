@@ -1,0 +1,10 @@
+<p>WTSS</p>
+<ul>
+    <li><b>URL:</b> {{ url }}</li>
+    <li><b>Coverages:</b></li>
+    <ul>
+    {% for cv in coverages -%}
+        <li>{{ cv }}</li>
+    {%- endfor %}
+    </ul>
+</ul>

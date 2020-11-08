@@ -1,0 +1,68 @@
+<div>
+    <div>
+        <b>Coverage</b> {{ coverage.name }}
+    </div>
+    <br/>
+    <div>
+        <b>Description:</b> {{ coverage.description }}
+    </div>
+    <br/>
+    <div>
+        <b>Attributes</b>
+    </div>
+    <div>
+        <table>
+            <tr>
+            </tr>
+            <tr>
+                <th>name</th>
+                <th>description</th>
+                <th>datatype</th>
+                <th>valid range</th>
+                <th>scale</th>
+                <th>nodata</th>
+            </tr>
+            {% for attr in coverage['attributes'] -%}
+            <tr>
+                <td>{{ attr['name'] }}</td>
+                <td>{{ attr['description'] }}</td>
+                <td>{{ attr['datatype'] }}</td>
+                <td>{{ attr['valid_range'] }}</td>
+                <td>{{ attr['scale_factor'] }}</td>
+                <td>{{ attr['missing_value'] }}</td>
+            </tr>
+            {%- endfor %}
+        </table>
+    </div>
+    </br>
+    <div>
+        <b>Extent</b>
+    </div>
+    <div>
+        <table>
+            <tr>
+                <th>xmin</th>
+                <th>ymin</th>
+                <th>xmax</th>
+                <th>ymax</th>
+            </tr>
+             <tr>
+                 <td>{{ coverage['spatial_extent']['xmin'] }}</td>
+                 <td>{{ coverage['spatial_extent']['ymin'] }}</td>
+                 <td>{{ coverage['spatial_extent']['xmax'] }}</td>
+                 <td>{{ coverage['spatial_extent']['ymax'] }}</td>
+             </tr>
+        </table>
+    </div>
+    <br/>
+    <div>
+        <b>Timeline</b>
+    </div>
+    <div>
+        <select id="timeline" size="10">
+        {% for d in coverage['timeline'] -%}
+            <option value="{d}">{{ d }}</option>
+        {%- endfor %}
+        </select>
+    </div>
+</div>

@@ -32,6 +32,7 @@ of ``January 1st, 2001`` and ``December 31st, 2003``:
 import requests
 
 from .coverage import Coverage
+from .utils import render_html
 
 
 class WTSS:
@@ -244,20 +245,7 @@ class WTSS:
         """
         cv_list = self._list_coverages()
 
-        coverages = ''
-
-        for cv_name in cv_list:
-            coverages += f'<li>{cv_name}</li>'
-
-        html = f'''\
-<p>WTSS</p>
-<ul>
-    <li><b>URL:</b> {self._url}</li>
-    <li><b>Coverages:</b></li>
-    <ul>
-    {coverages}
-    </ul>
-</ul>'''
+        html = render_html('wtss.html', url=self._url, coverages=cv_list)
 
         return html
 

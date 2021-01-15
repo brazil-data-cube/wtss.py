@@ -9,6 +9,6 @@
 
 pydocstyle wtss examples tests setup.py && \
 isort wtss examples tests setup.py --check-only --diff && \
-check-manifest --ignore ".drone.*" --ignore ".readthedocs.*" && \
+check-manifest --ignore ".drone.yml,.readthedocs.yml" && \
 sphinx-build -qnW --color -b doctest docs/sphinx/ docs/sphinx/_build/doctest && \
 pytest

@@ -47,6 +47,7 @@ WTSS is based on three operations:
     installation
     usage
     examples
+    jupyter
     api
     repository
     history

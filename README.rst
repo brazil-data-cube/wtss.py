@@ -16,8 +16,8 @@ Python Client Library for Web Time Series Service
         :alt: Software License
 
 
-.. image:: https://travis-ci.org/brazil-data-cube/wtss.py.svg?branch=master
-        :target: https://travis-ci.org/brazil-data-cube/wtss.py
+.. image:: https://drone.dpi.inpe.br/api/badges/brazil-data-cube/wtss.py/status.svg
+        :target: https://drone.dpi.inpe.br/brazil-data-cube/wtss.py
         :alt: Build Status
 
 

@@ -8,6 +8,9 @@
 
 """A class that represents a Time Series in WTSS."""
 
+from .utils import render_html
+
+
 class TimeSeries(dict):
     """A class that represents a time series in WTSS.
 
@@ -142,43 +145,6 @@ class TimeSeries(dict):
 
         This integrates a rich display in IPython.
         """
-        attr_rows = []
-
-        for attr in self['result']['attributes']:
-            attr_row = '''\
-<div>
-    <b>{attr_name}:</b> {values} 
-</div>
-'''.format(attr_name=attr['attribute'], values=attr['values'])
-
-            attr_rows.append(attr_row)
-
-        # show the timeline in a list
-        timeline_htlm = '<select id="timeline" size="10">'
-
-        timeline_options = [f'<option value="{d}">{d}</option>' for d in self.timeline]
-
-        timeline_htlm += ''.join(timeline_options) + '</select>'
-
-        html = '''\
-<div>
-    <div>
-        <b>Time Series</b> {cov_name}
-    </div>
-    </br>
-    <div>
-        {attributes}
-    </div>
-    </br>
-    <div>
-        <b>timeline</b>
-    </div>
-    <div>
-        {timeline}
-    </div>
-</div>
-'''.format(cov_name=self._coverage.name,
-           attributes=''.join(attr_rows),
-           timeline=timeline_htlm)
+        html = render_html('timeseries.html', timeseries=self)
 
         return html

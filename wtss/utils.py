@@ -10,6 +10,20 @@
 
 from datetime import datetime
 
+import jinja2
+from pkg_resources import resource_filename
+
+_template_loader = jinja2.FileSystemLoader(searchpath=resource_filename(__name__, 'templates/'))
+
+_template_env = jinja2.Environment(loader=_template_loader,
+                                   autoescape=jinja2.select_autoescape(['html']))
+
+
+def render_html(template_name, **kwargs):
+    """Render Jinja2 HTML template."""
+    template = _template_env.get_template(template_name)
+    return template.render(**kwargs)
+
 
 def to_datetime(timeline, fmt='%Y-%m-%d'):
     """Convert a timeline from a string list to a Python datetime list.

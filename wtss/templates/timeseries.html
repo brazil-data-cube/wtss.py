@@ -1,0 +1,24 @@
+<div>
+    <div>
+        <b>Time Series</b> {{ timeseries._coverage.name }}
+    </div>
+    <br/>
+    <div>
+        {% for attr in timeseries['result']['attributes'] -%}
+        <div>
+            <b>{{ attr['attribute'] }}:</b> {{ attr['values'] }}
+        </div>
+        {%- endfor %}
+    </div>
+    <br/>
+    <div>
+        <b>timeline</b>
+    </div>
+    <div>
+        <select id="timeline" size="10">
+        {% for d in timeseries.timeline -%}
+            <option value="{d}">{{ d }}</option>
+        {%- endfor %}
+        </select>
+    </div>
+</div>

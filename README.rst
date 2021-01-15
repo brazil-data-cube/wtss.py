@@ -21,8 +21,8 @@ Python Client Library for Web Time Series Service
         :alt: Build Status
 
 
-.. image:: https://coveralls.io/repos/github/brazil-data-cube/wtss.py/badge.svg?branch=master
-        :target: https://coveralls.io/github/brazil-data-cube/wtss.py?branch=master
+.. image:: https://codecov.io/gh/brazil-data-cube/wtss.py/branch/master/graph/badge.svg?token=E7F8BA09JF
+        :target: https://codecov.io/gh/brazil-data-cube/wtss.py
         :alt: Code Coverage Test
 
 

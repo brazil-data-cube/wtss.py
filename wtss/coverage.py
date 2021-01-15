@@ -9,6 +9,7 @@
 """A class that represents a coverage in WTSS."""
 
 from .timeseries import TimeSeries
+from .utils import render_html
 
 
 class Coverage(dict):
@@ -175,89 +176,6 @@ class Coverage(dict):
 
         This integrates a rich display in IPython.
         """
-        attr_rows = []
-
-        for attr in self['attributes']:
-            att_row_html = f'''\
-<tr>
-    <td>{attr["name"]}</td>
-    <td>{attr["description"]}</td>
-    <td>{attr["datatype"]}</td>
-    <td>{attr["valid_range"]}</td>
-    <td>{attr["scale_factor"]}</td>
-    <td>{attr["missing_value"]}</td>
-</tr>'''
-
-            attr_rows.append(att_row_html)
-
-        # shows timeline in a list
-        timeline_htlm = '''\
-<select id="timeline" size="10">
-'''
-
-        timeline_options = [f'<option value="{d}">{d}</option>' for d in self['timeline']]
-
-        timeline_htlm += ''.join(timeline_options) + '</select>'
-
-        html = '''\
-<div>
-    <div>
-        <b>Coverage</b> {name}
-    </div>
-    </br>
-    <div>
-        <b>Description</b> {description}
-    </div>
-    </br>
-    <div>
-        <b>Attributes</b>
-    </div>
-    <div>
-        <table>
-            <tr>
-            </tr>
-            <tr>
-                <th>name</th>
-                <th>description</th>
-                <th>datatype</th>
-                <th>valid range</th>
-                <th>scale</th>
-                <th>nodata</th>
-            </tr>
-            {attributes}
-        </table>      
-    </div>
-    </br>
-    <div>
-        <b>Extent</b>
-    </div>
-    <div>
-        <table>
-            <tr>
-                <th>xmin</th>
-                <th>ymin</th>
-                <th>xmax</th>
-                <th>ymax</th>
-            </tr>
-             <tr>
-                 <td>{xmin}</td>
-                 <td>{ymin}</td>
-                 <td>{xmax}</td>
-                 <td colspan="3">{ymax}</td>
-             </tr>
-        </table>
-    </div>
-    </br>
-    <div>
-        <b>Timeline</b>
-    </div>
-    <div>
-        {timeline}
-    </div>    
-</div>'''.format(name=self['name'],
-                 description=self['description'],
-                 attributes=''.join(attr_rows),
-                 timeline=timeline_htlm,
-                 **self['spatial_extent'])
+        html = render_html('coverage.html', coverage=self)
 
         return html

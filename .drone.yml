@@ -18,6 +18,9 @@ steps:
 
     - name: coverage
       image: plugins/codecov
+      when:
+          event:
+              - push
       settings:
           token:
               from_secret: CODECOV_TOKEN

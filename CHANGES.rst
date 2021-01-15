@@ -10,22 +10,17 @@ Changes
 =======
 
 
-Version 0.7.0-1
----------------
-
-
-Released 2020-11-08
+Version 0.7.0-2 (2021-01-15)
+----------------------------
 
 
 - Using Jinja 2 templates for Jupyter HTML output: `#51 <https://github.com/brazil-data-cube/wtss.py/issues/51>`_.
 
+- Using Drone: `#54 <https://github.com/brazil-data-cube/wtss.py/issues/54>`_.
 
 
-Version 0.7.0-1
----------------
-
-
-Released 2020-09-14
+Version 0.7.0-1 (2020-09-14)
+----------------------------
 
 
 - Improved integration with Jupyter Environment: `#25 <https://github.com/brazil-data-cube/wtss.py/issues/25>`_.
@@ -37,11 +32,9 @@ Released 2020-09-14
 - Fixed small typos in documentation.
 
 
-Version 0.7.0-0
----------------
+Version 0.7.0-0 (2020-09-11)
+----------------------------
 
-
-Released 2020-09-11
 
 - Basic integration with Jupyter Environment and Matplotlib.
 

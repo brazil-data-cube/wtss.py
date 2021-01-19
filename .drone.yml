@@ -31,3 +31,23 @@ steps:
           files:
               - coverage.xml
               - .coverage
+              
+    - name: pypi
+    
+      image: plugins/pypi
+      
+      settings:
+          username:
+              from_secret: pypi_user
+              
+          password:
+              from_secret: pypi_pass
+              
+          repository: https://upload.pypi.org/legacy/
+          
+          distributions:
+              - sdist
+              
+      when:
+          event:
+              - tag

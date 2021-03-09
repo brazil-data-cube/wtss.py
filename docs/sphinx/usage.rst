@@ -26,8 +26,8 @@ Import the ``wtss`` class and then use it to create an object to retrieve the ti
 
 .. note::
 
-    If you would like to access Brazil Data Cube Time Series, you must have an `Account <https://brazildatacube.dpi.inpe.br/portal/>`_ and give the
-    User Personal Access Token to the service instantiation like below:
+    If you would like to access Brazil Data Cube Time Series, you must have an `Account <https://brazildatacube.dpi.inpe.br/portal/>`_ and give the *User Personal Access Token* to the service instantiation like below:
+
 
     .. code-block:: python
 

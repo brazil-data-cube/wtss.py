@@ -24,6 +24,18 @@ Import the ``wtss`` class and then use it to create an object to retrieve the ti
     service = WTSS('http://www.esensing.dpi.inpe.br')
 
 
+.. note::
+
+    If you would like to access Brazil Data Cube Time Series, you must have an `Account <https://brazildatacube.dpi.inpe.br/portal/>`_ and give the *User Personal Access Token* to the service instantiation like below:
+
+
+    .. code-block:: python
+
+        from wtss import *
+
+        service = WTSS('https://brazildatacube.dpi.inpe.br', access_token='CHANGE_ME')
+
+
 The object ``service`` allows to list the available coverages:
 
 
@@ -166,6 +178,11 @@ Finally, to retrieve the time series over a coverage in a specific location::
             --longitude -54 --latitude -12 \
             --start-date 2001-01-01 --end-date 2001-12-31 \
             --url http://localhost
+
+
+.. note::
+
+    You may also need to pass the parameter ``--access_token=CHANGE_ME`` to retrieve time series.
 
 
 If you want to know more about commands and their options, use the help::

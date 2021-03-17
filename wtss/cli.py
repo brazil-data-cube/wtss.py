@@ -21,18 +21,21 @@ def cli():
     .. note:: You can invoke more than one subcommand in one go.
     """
 
+
 @cli.command()
 @click.option('-v', '--verbose', is_flag=True, default=False)
 @click.option('-u', '--url', required=True, type=str,
               help='WTSS server address.')
-def list_coverages(verbose, url):
+@click.option('--access-token', required=False, type=str,
+              help='User Personal Access Token.')
+def list_coverages(verbose, url, access_token=None):
     """List available coverages."""
     if verbose:
         click.secho(f'Server: {url}', bold=True, fg='black')
         click.secho('\tRetrieving the list of available coverages... ',
                     bold=False, fg='black')
 
-    service = WTSS(url)
+    service = WTSS(url, access_token=access_token)
 
     if verbose:
         for cv in service:
@@ -51,14 +54,16 @@ def list_coverages(verbose, url):
               help='WTSS server address.')
 @click.option('-c', '--coverage', required=True, type=str,
               help='Coverage name')
-def describe(verbose, url, coverage):
+@click.option('--access-token', required=False, type=str,
+              help='User Personal Access Token.')
+def describe(verbose, url, coverage, access_token=None):
     """Retrieve the coverage metadata."""
     if verbose:
         click.secho(f'Server: {url}', bold=True, fg='black')
         click.secho('\tRetrieving the coverage metadata... ',
                     bold=False, fg='black')
 
-    service = WTSS(url)
+    service = WTSS(url, access_token=access_token)
 
     cv = service[coverage]
 
@@ -84,15 +89,17 @@ def describe(verbose, url, coverage):
               help='Start date')
 @click.option('--end-date', required=False, type=str,
               help='End date')
+@click.option('--access-token', required=False, type=str,
+              help='User Personal Access Token.')
 def ts(verbose, url, coverage, attributes,
-       latitude, longitude, start_date, end_date):
+       latitude, longitude, start_date, end_date, access_token=None):
     """Retrieve the coverage metadata."""
     if verbose:
         click.secho(f'Server: {url}', bold=True, fg='black')
         click.secho('\tRetrieving time series... ',
                     bold=False, fg='black')
 
-    service = WTSS(url)
+    service = WTSS(url, access_token=access_token)
 
     cv = service[coverage]
 

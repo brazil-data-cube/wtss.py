@@ -10,16 +10,11 @@ Changes
 =======
 
 
-Version 0.8.0 (2021-03-16)
---------------------------
-
-
-- Addedd ``access token`` to the client API.
-
-
-Version 0.7.0-2 (2021-01-15)
+Version 0.7.0-2 (2021-03-17)
 ----------------------------
 
+
+- Addedd ``access token`` to the client API: `#57 <https://github.com/brazil-data-cube/wtss.py/issues/57>`_.
 
 - Using Jinja 2 templates for Jupyter HTML output: `#51 <https://github.com/brazil-data-cube/wtss.py/issues/51>`_.
 

@@ -16,6 +16,7 @@
             </tr>
             <tr>
                 <th>name</th>
+                <th>common name</th>
                 <th>description</th>
                 <th>datatype</th>
                 <th>valid range</th>
@@ -25,6 +26,7 @@
             {% for attr in coverage['attributes'] -%}
             <tr>
                 <td>{{ attr['name'] }}</td>
+                <td>{{ attr['common_name'] }}</td>
                 <td>{{ attr['description'] }}</td>
                 <td>{{ attr['datatype'] }}</td>
                 <td>{{ attr['valid_range'] }}</td>

@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2020 INPE.
+# Copyright (C) 2020-2021 INPE.
 #
 # Python Client Library for WTSS is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -10,7 +10,7 @@
 
 from wtss import *
 
-service = WTSS('http://www.esensing.dpi.inpe.br')
+service = WTSS('https://brazildatacube.dpi.inpe.br/dev', access_token='change-me')
 
 print(service)
 print(str(service))
@@ -18,10 +18,10 @@ print(repr(service))
 print(service._repr_html_())
 
 
-print(service.MOD13Q1)
-print(str(service.MOD13Q1))
-print(repr(service.MOD13Q1))
-print(service.MOD13Q1._repr_html_())
+print(service['CB4_64_16D_STK-1'])
+print(str(service['CB4_64_16D_STK-1']))
+print(repr(service['CB4_64_16D_STK-1']))
+print(service['CB4_64_16D_STK-1']._repr_html_())
 
 ts = service.MOD13Q1.ts(attributes='red, nir',
                         latitude=-12, longitude=-54,

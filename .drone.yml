@@ -7,65 +7,52 @@
 #
 
 kind: pipeline
-
 name: wtss.py
 
 steps:
-    - name: build
+- name: build-test
+  image: python:3.7
+  environment:
+    WTSS_EXAMPLE_URL: http://www.esensing.dpi.inpe.br
+    WTSS_TEST_URL: http://www.esensing.dpi.inpe.br
+  commands:
+    - pip install --upgrade pip
+    - pip install --upgrade setuptools
+    - pip install -e .[tests,docs]
+    - ./run-tests.sh
 
-      image: python:3.7
+- name: coverage
+  image: plugins/codecov
+  settings:
+    token:
+      from_secret: codecov_token
+    files:
+      - coverage.xml
+      - .coverage
+  when:
+    event:
+      - push
 
-      environment:
-          WTSS_EXAMPLE_URL: http://www.esensing.dpi.inpe.br
-          WTSS_TEST_URL: http://www.esensing.dpi.inpe.br
-
-      commands:
-          - pip install --upgrade pip
-          - pip install --upgrade setuptools
-          - pip install -e .[tests,docs]
-          - ./run-tests.sh
-
-    - name: coverage
-
-      image: plugins/codecov
-
-      when:
-          event:
-              - push
-      settings:
-          token:
-              from_secret: CODECOV_TOKEN
-
-          files:
-              - coverage.xml
-              - .coverage
-              
-    - name: pypi
-    
-      image: plugins/pypi
-      
-      settings:
-          username:
-              from_secret: pypi_user
-              
-          password:
-              from_secret: pypi_pass
-              
-          repository: https://upload.pypi.org/legacy/
-          
-          distributions:
-              - sdist
-              
-      when:
-          event:
-              - tag
+- name: pypi
+  image: plugins/pypi
+  settings:
+    username:
+      from_secret: pypi_user
+    password:
+      from_secret: pypi_pass
+    repository: https://upload.pypi.org/legacy/
+    distributions:
+      - sdist
+  when:
+    event:
+      - tag
 
 - name: discord-notify
-    image: brazildatacube/bdc-drone-discord
-    settings:
-        webhook:
-            from_secret: discord_webhook
-    when:
-        status:
-            - failure
-            - success
+  image: brazildatacube/bdc-drone-discord
+  settings:
+    webhook:
+      from_secret: discord_webhook
+  when:
+    status:
+      - failure
+      - success

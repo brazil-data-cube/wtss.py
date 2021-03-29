@@ -10,6 +10,14 @@ Changes
 =======
 
 
+Version 0.7.0-3 (2021-03-29)
+----------------------------
+
+
+- Add the property ``common_name`` to the ``describe_coverage`` HTML representation: `#63 <https://github.com/brazil-data-cube/wtss.py/issues/63>`_.
+
+
+
 Version 0.7.0-2 (2021-03-17)
 ----------------------------
 

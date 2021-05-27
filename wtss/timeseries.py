@@ -57,10 +57,11 @@ class TimeSeries(dict):
         return getattr(self, attr_name)
 
 
-    def plot(self, **options):
+    def plot(self, discard_nodata=False, **options):
         """Plot the time series on a chart.
 
         Keyword Args:
+            discard_nodata (bool): Discard the missing values in time series. Default is False.
             attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
             line_styles (sequence): Not implemented yet.
             markers (sequence): Not implemented yet.
@@ -118,7 +119,26 @@ class TimeSeries(dict):
         attrs = options['attributes'] if 'attributes' in options else self.attributes
 
         for attr in attrs:
+            missing_value = None
+            for coverage_attribute in self._coverage.attributes:
+                print(coverage_attribute)
+                if coverage_attribute['name'] == attr:
+                    missing_value = coverage_attribute['missing_value']
+                    break
+
             y = self.values(attr)
+
+            if discard_nodata:
+                _y = []
+                _x = []
+
+                for i, value in enumerate(y):
+                    if value != missing_value:
+                        _y.append(value)
+                        _x.append(x[i])
+
+                y = _y
+                x = _x
 
             ax.plot(x, y,
                     ls='-',

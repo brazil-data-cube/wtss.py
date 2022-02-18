@@ -10,18 +10,18 @@
 
 from wtss import *
 
-service = WTSS('http://www.esensing.dpi.inpe.br')
+service = WTSS('https://brazildatacube.dpi.inpe.br/', access_token='change-me')
 
-coverage = service['MOD13Q1']
+coverage = service['MOD13Q1-6']
 
-ts = coverage.ts(attributes=('red', 'nir', 'blue'),
+ts = coverage.ts(attributes=('red_reflectance', 'NIR_reflectance', 'blue_reflectance'),
                  latitude=-12.0, longitude=-54.0,
                  start_date='2001-01-01', end_date='2001-12-31')
 
-print(ts.red)
+print(ts.red_reflectance)
 
-print(ts.nir)
+print(ts.NIR_reflectance)
 
 print(ts.timeline)
 
-ts.plot(attributes=['blue'])
+ts.plot(attributes=['blue_reflectance'])

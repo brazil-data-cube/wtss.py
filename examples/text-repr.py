@@ -10,7 +10,7 @@
 
 from wtss import *
 
-service = WTSS('https://brazildatacube.dpi.inpe.br/dev', access_token='change-me')
+service = WTSS('https://brazildatacube.dpi.inpe.br/', access_token='change-me')
 
 print(service)
 print(str(service))
@@ -23,7 +23,9 @@ print(str(service['CB4_64_16D_STK-1']))
 print(repr(service['CB4_64_16D_STK-1']))
 print(service['CB4_64_16D_STK-1']._repr_html_())
 
-ts = service.MOD13Q1.ts(attributes='red, nir',
+coverage = service['MOD13Q1-6']
+
+ts = coverage.ts(attributes=('red_reflectance', 'NIR_reflectance'),
                         latitude=-12, longitude=-54,
                         start_date='2001-01-01', end_date='2001-12-31')
 print(ts)

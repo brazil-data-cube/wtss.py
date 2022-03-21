@@ -10,7 +10,7 @@
 
 from wtss import *
 
-service = WTSS('http://www.esensing.dpi.inpe.br')
+service = WTSS('https://brazildatacube.dpi.inpe.br/')
 
 for cv in service:
     print(cv)

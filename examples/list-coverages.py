@@ -10,6 +10,6 @@
 
 from wtss import *
 
-service = WTSS('http://www.esensing.dpi.inpe.br')
+service = WTSS('https://brazildatacube.dpi.inpe.br/')
 
 print(service.coverages)

@@ -28,8 +28,12 @@ of ``January 1st, 2001`` and ``December 31st, 2003``:
         Coverage...
         ...
 """
+import os
+from distutils.util import strtobool
+from urllib.parse import urljoin
 
 import requests
+from pystac_client import Client
 
 from .coverage import Coverage
 from .utils import render_html
@@ -44,7 +48,10 @@ class WTSS:
         `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
     """
 
-    def __init__(self, url, validate=False, access_token=None):
+    def __init__(self, url: str,
+                 stac_url: str = 'https://brazildatacube.dpi.inpe.br/stac/',
+                 validate=False, access_token: str = None,
+                 headers=None):
         """Create a WTSS client attached to the given host address (an URL).
 
         Args:
@@ -61,6 +68,8 @@ class WTSS:
         #: str: Authentication token to be used with the WTSS server.
         self._access_token = access_token
 
+        parameters = dict(access_token=access_token)
+        self._stac = Client.open(stac_url, headers=headers, parameters=parameters)
 
     @property
     def coverages(self):
@@ -74,47 +83,10 @@ class WTSS:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        return self._list_coverages()
+        collections = self._stac.get_collections()
+        return [collection.id for collection in collections]
 
-
-    def _list_coverages(self):
-        """List available coverages in the service.
-
-        Returns:
-            list: A list with the names of available coverages in the service.
-
-        Raises:
-            ConnectionError: If the server is not reachable.
-            HTTPError: If the server response indicates an error.
-            ValueError: If the response body is not a json document.
-        """
-        result = WTSS._get(self._url, op='list_coverages')
-
-        return result['coverages']
-
-
-    def _describe_coverage(self, name):
-        """Get coverage metadata for the given coverage identified by its name.
-
-        Args:
-            name (str): The coverage name identifier used to retrieve its metadata.
-
-        Returns:
-            dict: The coverage metadata as a dictionary.
-
-        Raises:
-            ConnectionError: If the server is not reachable.
-            HTTPError: If the server response indicates an error.
-            ValueError: If the response body is not a json document.
-        """
-        cv = WTSS._get(self._url,
-                       op='describe_coverage',
-                       name=name)
-
-        return cv
-
-
-    def _time_series(self, **options):
+    def _time_series(self, coverage: str, **options):
         """Retrieve the time series for a given location.
 
         Keyword Args:
@@ -134,12 +106,41 @@ class WTSS:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        ts = WTSS._get(self._url,
-                       op='time_series',
-                       **options)
+        url = urljoin(self._url.rstrip('/') + '/', coverage)
+        headers = {'x-api-key': self._access_token}
+        ts = WTSS._request(url,
+                           op='timeseries',
+                           headers=headers,
+                           **options)
 
         return ts
 
+    def _summarize(self, **options):
+        """Retrieve the time series summarization for a given geometry.
+
+        Keyword Args:
+            attributes (optional): A string with attribute names separated by commas,
+                or any sequence of strings. If omitted, the values for all
+                coverage attributes are retrieved.
+            longitude (int/float): A longitude value according to EPSG:4326.
+            latitude (int/float): A latitude value according to EPSG:4326.
+            start_date (:obj:`str`, optional): The begin of a time interval.
+            end_date (:obj:`str`, optional): The begin of a time interval.
+            aggregations (:obj:`str`, optional): The list of aggregate functions to be applied over time series.
+
+        Returns:
+            dict: A time series object as a dictionary containing the summarization.
+
+        Raises:
+            ConnectionError: If the server is not reachable.
+            HTTPError: If the server response indicates an error.
+            ValueError: If the response body is not a json document.
+        """
+        ts = WTSS._get(self._url,
+                       op='summarize',
+                       **options)
+
+        return ts
 
     def __getitem__(self, key):
         """Get coverage whose name is identified by the key.
@@ -164,10 +165,9 @@ class WTSS:
                 >>> service['MOD13Q1']
                 Coverage...
         """
-        cv_meta = self._describe_coverage(key)
+        collection = self._stac.get_collection(key)
 
-        return Coverage(service=self, metadata=cv_meta)
-
+        return Coverage(service=self, metadata=collection.to_dict())
 
     def __getattr__(self, name):
         """Get coverage identified by name.
@@ -197,7 +197,6 @@ class WTSS:
         except:
             raise AttributeError(f'No attribute named "{name}"')
 
-
     def __iter__(self):
         """Iterate over coverages available in the service.
 
@@ -207,13 +206,11 @@ class WTSS:
         for cv_name in self.coverages:
             yield self[cv_name]
 
-
     def __str__(self):
         """Return the string representation of the WTSS object."""
         text = f'WTSS:\n\tURL: {self._url}'
 
         return text
-
 
     def __repr__(self):
         """Return the WTSS object representation."""
@@ -222,7 +219,6 @@ class WTSS:
                f'access_token={self._access_token})'
 
         return text
-
 
     def _ipython_key_completions_(self):
         """Integrate key completions for WTSS in IPython.
@@ -235,23 +231,21 @@ class WTSS:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        return self._list_coverages()
-
+        return self.coverages
 
     def _repr_html_(self):
         """Display the WTSS object as HTML.
 
         This integrates a rich display in IPython.
         """
-        cv_list = self._list_coverages()
+        cv_list = self.coverages
 
         html = render_html('wtss.html', url=self._url, coverages=cv_list)
 
         return html
 
-
     @staticmethod
-    def _get(url, op, **params):
+    def _request(url, op, method: str = 'post', headers=None, **params):
         """Query the WTSS service using HTTP GET verb and return the result as a JSON document.
 
         Args:
@@ -268,11 +262,12 @@ class WTSS:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body does not contain a valid json or geojson.
         """
-        url_components = [url, 'wtss', op]
+        url_components = [url, op]
 
         url = '/'.join(s.strip('/') for s in url_components)
+        verify = bool(strtobool(os.getenv('REQUEST_SSL_VERIFY', '1')))
 
-        response = requests.get(url, params=params)
+        response = getattr(requests, method)(url, headers=headers, json=params, verify=verify)
 
         response.raise_for_status()
 

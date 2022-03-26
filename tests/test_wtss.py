@@ -38,7 +38,7 @@ def test_describe_coverage(URL, MOD13Q1):
 @pytest.mark.xfail(raises=_ConnectionError,
                    reason='WTSS server not reached!')
 @pytest.mark.parametrize(
-    'coverage, attr, location, start_date, end_date, result',
+    'coverage, attr, location, start_datetime, end_datetime, result',
     [
         ('MOD13Q1', 'nir', dict(latitude=-12, longitude=-54),
          '2001-01-01', '2001-12-31',
@@ -50,13 +50,13 @@ def test_describe_coverage(URL, MOD13Q1):
          ])
     ]
 )
-def test_st(URL, coverage, attr, location, start_date, end_date, result):
+def test_st(URL, coverage, attr, location, start_datetime, end_datetime, result):
     service = WTSS(URL)
 
     cov = service[coverage]
 
     ts = cov.ts(attributes=attr,
                 latitude=location['latitude'], longitude=location['longitude'],
-                start_date=start_date, end_date=end_date)
+                start_datetime=start_datetime, end_datetime=end_datetime)
 
     assert ts.values(attr) == result

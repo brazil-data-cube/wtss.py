@@ -8,8 +8,8 @@
 
 """A class that represents a coverage in WTSS."""
 
-from .timeseries import TimeSeries
-from .utils import render_html
+from timeseries import TimeSeries
+from utils import render_html
 
 
 class Coverage(dict):
@@ -33,47 +33,83 @@ class Coverage(dict):
 
         super(Coverage, self).__init__(metadata or {})
 
+
     @property
     def attributes(self):
         """Return the list of coverage attributes."""
-        return self['attributes']
+        return self['cube:dimensions']['bands']['values']
+
 
     @property
     def crs(self):
         """Return the coordinate reference system metadata."""
-        return self['crs']
+        return self['bdc:crs']
+
 
     @property
     def description(self):
         """Return the coverage description."""
         return self['description']
 
+
     @property
     def dimensions(self):
         """Return the coverage dimensions metadata."""
-        return self['dimensions']
+        return self['cube:dimensions']
+
 
     @property
     def name(self):
         """Return the coverage name."""
         return self['id']
 
+
     @property
     def spatial_extent(self):
         """Return the coverage spatial extent."""
-        return self['spatial_extent']
+        return self['extent']['spatial']['bbox'][0]
 
-    @property
-    def spatial_resolution(self):
-        """Return the coverage spatial resolution metadata."""
-        return self['spatial_resolution']
+
+    # @property
+    # def spatial_resolution(self):
+    #     """Return the coverage spatial resolution metadata."""
+    #     return self['extent']
+
 
     @property
     def timeline(self):
         """Return the coverage timeline."""
-        return self['timeline']
+        return self['cube:dimensions']['temporal']['values']
 
-    def ts(self, geom=None, **options):
+
+
+    def convert_geom_to_shapely(geom):
+        """Convert the geometry parameter to shapely object."""
+        
+        import json
+        import shapely
+        
+        try:
+            if isinstance(query_geom, str):
+                query_geom = json.loads(query_geom)
+
+            # Convert query geometry to shapely object
+            geom = shapely.geometry.shape(query_geom)
+            return geom
+        except:
+            return None
+
+
+    def ts(self, 
+            attributes=None, 
+            geom=None, 
+            latitude=None, 
+            longitude=None, 
+            start_datetime=None, 
+            end_datetime=None, 
+            applyAttributeScale=False, 
+            pixelCollisionType='center'):
+            
         """Retrieve the time series for a given location and time interval.
 
         Keyword Args:
@@ -82,8 +118,8 @@ class Coverage(dict):
                 coverage attributes are retrieved.
             longitude (int/float): A longitude value according to EPSG:4326.
             latitude (int/float): A latitude value according to EPSG:4326.
-            start_date (:obj:`str`, optional): The begin of a time interval.
-            end_date (:obj:`str`, optional): The begin of a time interval.
+            start_datetime (:obj:`str`, optional): The begin of a time interval.
+            end_datetime (:obj:`str`, optional): The begin of a time interval.
 
         Returns:
             TimeSeries: A time series object as a dictionary.
@@ -105,40 +141,39 @@ class Coverage(dict):
                 >>> coverage = service['MOD13Q1']
                 >>> ts = coverage.ts(attributes=('red', 'nir'),
                 ...                  latitude=-12.0, longitude=-54.0,
-                ...                  start_date='2001-01-01', end_date='2001-12-31')
+                ...                  start_datetime='2001-01-01', end_datetime='2001-12-31')
                 ...
                 >>> ts.red
                 [236.0, 289.0, ..., 494.0, 1349.0]
         """
-        attributes = options['attributes'] \
-            if 'attributes' in options and options['attributes'] \
-            else [attr['name'] for attr in self.attributes]
 
+        # Check attributes
+        if attributes is not None:
+            [attr for attr in self.attributes]
+
+        # Check geometry
         if geom is None:
-            if ('latitude' not in options) or ('longitude' not in options):
-                raise ValueError("Arguments latitude and longitude are mandatory.")
-
-            latitude = options['latitude']
-            longitude = options['longitude']
+            if latitude==None or longitude==None:
+                raise ValueError("Argument geom or arguments latitude and longitude are mandatory.")
 
             if (type(latitude) not in (float, int)) or (type(longitude) not in (float, int)):
                 raise ValueError("Arguments latitude and longitude must be numeric.")
 
-            if (latitude < -90.0) or (latitude > 90.0):
-                raise ValueError('latitude is out-of range [-90,90]!')
+            if latitude<-90.0 or latitude>90.0:
+                raise ValueError('latitude is out-of range [-90,90].')
 
-            if (longitude < -180.0) or (longitude > 180.0):
-                raise ValueError('longitude is out-of range [-180,180]!')
+            if longitude<-180.0 or longitude>180.0:
+                raise ValueError('longitude is out-of range [-180,180].')
 
             geom = dict(type="Point", coordinates=[longitude, latitude])
 
-        start_date = options['start_date'] if ('start_date' in options) else None
-
-        end_date = options['end_date'] if ('end_date' in options) else None
-
-        data = self._service._time_series(coverage=self.name, attributes=attributes,
-                                          geom=geom,
-                                          start_date=start_date, end_date=end_date)
+        data = self._service._time_series(coverage = self.name, 
+                                          attributes = attributes,
+                                          geom = geom,
+                                          start_datetime = start_datetime, 
+                                          end_datetime = end_datetime,
+                                          applyAttributeScale = applyAttributeScale,
+                                          pixelCollisionType = pixelCollisionType)
 
         return TimeSeries(self, data)
 

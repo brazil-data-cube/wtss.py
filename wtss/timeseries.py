@@ -8,7 +8,7 @@
 
 """A class that represents a Time Series in WTSS."""
 
-from .utils import render_html
+from utils import render_html
 
 
 class TimeSeries(dict):
@@ -32,22 +32,22 @@ class TimeSeries(dict):
         super(TimeSeries, self).__init__(data or {})
 
         # add coverage attributes as object keys
-        attrs = self['result']['attributes']
+        attrs = data['results'][0]['time_series']['values']
 
         for attr in attrs:
-            setattr(self, attr['attribute'], attr['values'])
+            setattr(self, attr, attrs[attr])
 
 
     @property
     def timeline(self, as_date=False, fmt=''):
         """Return the timeline associated to the time series."""
-        return self['result']['timeline']
+        return self['results'][0]['time_series']['timeline']
 
 
     @property
     def attributes(self):
         """Return a list with attribute names."""
-        attributes = [attr['attribute'] for attr in self['result']['attributes']]
+        attributes = [attr for attr in self['results'][0]['time_series']['values']]
 
         return attributes
 
@@ -83,7 +83,7 @@ class TimeSeries(dict):
                 >>> coverage = service['MOD13Q1']
                 >>> ts = coverage.ts(attributes=('red', 'nir'),
                 ...                  latitude=-12.0, longitude=-54.0,
-                ...                  start_date='2001-01-01', end_date='2001-12-31')
+                ...                  start_datetime='2001-01-01', end_datetime='2001-12-31')
                 ...
                 >>> ts.plot()
 

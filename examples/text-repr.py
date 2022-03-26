@@ -25,7 +25,7 @@ print(service.MOD13Q1._repr_html_())
 
 ts = service.MOD13Q1.ts(attributes='red, nir',
                         latitude=-12, longitude=-54,
-                        start_date='2001-01-01', end_date='2001-12-31')
+                        start_datetime='2001-01-01', end_datetime='2001-12-31')
 print(ts)
 print(str(ts))
 print(repr(ts))

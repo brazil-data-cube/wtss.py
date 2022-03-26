@@ -10,23 +10,6 @@
 
 This module introduces a class named ``wtss`` that can be used to retrieve
 satellite image time series for a given location.
-
-
-As an example, we could retrieve the time series for the ``MOD13Q1`` data
-product given the ``longitude -54.0`` and ``latitude -12.0`` in the date interval
-of ``January 1st, 2001`` and ``December 31st, 2003``:
-
-
-    .. doctest::
-        :skipif: WTSS_EXAMPLE_URL is None
-
-        >>> from wtss import *
-        >>> service = WTSS(WTSS_EXAMPLE_URL)
-        >>> for cv in service:
-        ...     print(cv)
-        ...
-        Coverage...
-        ...
 """
 import os
 from distutils.util import strtobool
@@ -35,8 +18,8 @@ from urllib.parse import urljoin
 import requests
 from pystac_client import Client
 
-from .coverage import Coverage
-from .utils import render_html
+from coverage import Coverage
+from utils import render_html
 
 
 class WTSS:
@@ -48,10 +31,12 @@ class WTSS:
         `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
     """
 
-    def __init__(self, url: str,
+    def __init__(self,
+                 url: str,
                  stac_url: str = 'https://brazildatacube.dpi.inpe.br/stac/',
-                 validate=False, access_token: str = None,
-                 headers=None):
+                 validate = False, 
+                 access_token: str = None,
+                 headers = None):
         """Create a WTSS client attached to the given host address (an URL).
 
         Args:
@@ -95,8 +80,8 @@ class WTSS:
                 coverage attributes are retrieved.
             longitude (int/float): A longitude value according to EPSG:4326.
             latitude (int/float): A latitude value according to EPSG:4326.
-            start_date (:obj:`str`, optional): The begin of a time interval.
-            end_date (:obj:`str`, optional): The begin of a time interval.
+            start_datetime (:obj:`str`, optional): The begin of a time interval.
+            end_datetime (:obj:`str`, optional): The begin of a time interval.
 
         Returns:
             dict: A time series object as a dictionary.
@@ -109,6 +94,7 @@ class WTSS:
         url = urljoin(self._url.rstrip('/') + '/', coverage)
         headers = {'x-api-key': self._access_token}
         ts = WTSS._request(url,
+                           method='post',
                            op='timeseries',
                            headers=headers,
                            **options)
@@ -124,8 +110,8 @@ class WTSS:
                 coverage attributes are retrieved.
             longitude (int/float): A longitude value according to EPSG:4326.
             latitude (int/float): A latitude value according to EPSG:4326.
-            start_date (:obj:`str`, optional): The begin of a time interval.
-            end_date (:obj:`str`, optional): The begin of a time interval.
+            start_datetime (:obj:`str`, optional): The begin of a time interval.
+            end_datetime (:obj:`str`, optional): The begin of a time interval.
             aggregations (:obj:`str`, optional): The list of aggregate functions to be applied over time series.
 
         Returns:
@@ -266,6 +252,8 @@ class WTSS:
 
         url = '/'.join(s.strip('/') for s in url_components)
         verify = bool(strtobool(os.getenv('REQUEST_SSL_VERIFY', '1')))
+
+        token = headers['x-api-key']
 
         response = getattr(requests, method)(url, headers=headers, json=params, verify=verify)
 

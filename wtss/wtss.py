@@ -11,6 +11,7 @@
 This module introduces a class named ``wtss`` that can be used to retrieve
 satellite image time series for a given location.
 """
+import json
 import os
 from distutils.util import strtobool
 from urllib.parse import urljoin
@@ -71,7 +72,7 @@ class WTSS:
         collections = self._stac.get_collections()
         return [collection.id for collection in collections]
 
-    def _time_series(self, coverage: str, **options):
+    def _retrieve_timeseries_or_summarize(self, coverage_name:str, route:str, options:dict):
         """Retrieve the time series for a given location.
 
         Keyword Args:
@@ -91,43 +92,17 @@ class WTSS:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        url = urljoin(self._url.rstrip('/') + '/', coverage)
+        url = urljoin(self._url.rstrip('/') + '/', coverage_name)
         headers = {'x-api-key': self._access_token}
-        ts = WTSS._request(url,
-                           method='post',
-                           op='timeseries',
-                           headers=headers,
-                           **options)
+        request_result = WTSS._request( url,
+                                        method='post',
+                                        op=route,
+                                        headers=headers,
+                                        params=options)
 
-        return ts
+        return request_result
 
-    def _summarize(self, **options):
-        """Retrieve the time series summarization for a given geometry.
-
-        Keyword Args:
-            attributes (optional): A string with attribute names separated by commas,
-                or any sequence of strings. If omitted, the values for all
-                coverage attributes are retrieved.
-            longitude (int/float): A longitude value according to EPSG:4326.
-            latitude (int/float): A latitude value according to EPSG:4326.
-            start_datetime (:obj:`str`, optional): The begin of a time interval.
-            end_datetime (:obj:`str`, optional): The begin of a time interval.
-            aggregations (:obj:`str`, optional): The list of aggregate functions to be applied over time series.
-
-        Returns:
-            dict: A time series object as a dictionary containing the summarization.
-
-        Raises:
-            ConnectionError: If the server is not reachable.
-            HTTPError: If the server response indicates an error.
-            ValueError: If the response body is not a json document.
-        """
-        ts = WTSS._get(self._url,
-                       op='summarize',
-                       **options)
-
-        return ts
-
+   
     def __getitem__(self, key):
         """Get coverage whose name is identified by the key.
 
@@ -231,7 +206,7 @@ class WTSS:
         return html
 
     @staticmethod
-    def _request(url, op, method: str = 'post', headers=None, **params):
+    def _request(url, op, params, method:str='post', headers=None):
         """Query the WTSS service using HTTP GET verb and return the result as a JSON document.
 
         Args:

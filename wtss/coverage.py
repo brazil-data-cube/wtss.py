@@ -9,7 +9,11 @@
 """A class that represents a coverage in WTSS."""
 
 from timeseries import TimeSeries
+from summarize import Summarize
 from utils import render_html
+import shapely
+import json
+from dateutil.parser import parse
 
 
 class Coverage(dict):
@@ -37,7 +41,7 @@ class Coverage(dict):
     @property
     def attributes(self):
         """Return the list of coverage attributes."""
-        return self['cube:dimensions']['bands']['values']
+        return [band['name'] for band in self['properties']['eo:bands']]
 
 
     @property
@@ -82,80 +86,27 @@ class Coverage(dict):
         return self['cube:dimensions']['temporal']['values']
 
 
+    @staticmethod
+    def _check_input_parameters(self, options):
 
-    def convert_geom_to_shapely(geom):
-        """Convert the geometry parameter to shapely object."""
-        
-        import json
-        import shapely
-        
-        try:
-            if isinstance(query_geom, str):
-                query_geom = json.loads(query_geom)
-
-            # Convert query geometry to shapely object
-            geom = shapely.geometry.shape(query_geom)
-            return geom
-        except:
-            return None
-
-
-    def ts(self, 
-            attributes=None, 
-            geom=None, 
-            latitude=None, 
-            longitude=None, 
-            start_datetime=None, 
-            end_datetime=None, 
-            applyAttributeScale=False, 
-            pixelCollisionType='center'):
-            
-        """Retrieve the time series for a given location and time interval.
-
-        Keyword Args:
-            attributes (optional): A string with attribute names separated by commas,
-                or any sequence of strings. If omitted, the values for all
-                coverage attributes are retrieved.
-            longitude (int/float): A longitude value according to EPSG:4326.
-            latitude (int/float): A latitude value according to EPSG:4326.
-            start_datetime (:obj:`str`, optional): The begin of a time interval.
-            end_datetime (:obj:`str`, optional): The begin of a time interval.
-
-        Returns:
-            TimeSeries: A time series object as a dictionary.
-
-        Raises:
-            HTTPError: If the server response indicates an error.
-            ValueError: If the response body is not a json document.
-            ImportError: If Maptplotlib or Numpy can no be imported.
-
-        Example:
-
-            Retrieves a time series for MODIS13Q1 data product:
-
-            .. doctest::
-                :skipif: WTSS_EXAMPLE_URL is None
-
-                >>> from wtss import *
-                >>> service = WTSS(WTSS_EXAMPLE_URL)
-                >>> coverage = service['MOD13Q1']
-                >>> ts = coverage.ts(attributes=('red', 'nir'),
-                ...                  latitude=-12.0, longitude=-54.0,
-                ...                  start_datetime='2001-01-01', end_datetime='2001-12-31')
-                ...
-                >>> ts.red
-                [236.0, 289.0, ..., 494.0, 1349.0]
-        """
-
-        # Check attributes
-        if attributes is not None:
-            [attr for attr in self.attributes]
-
+        # -------------------------------------------------------------------------
         # Check geometry
+
+        geom = options['geom'] if 'geom' in options.keys() else None
+        latitude = options['latitude'] if 'latitude' in options.keys() else None
+        longitude = options['longitude'] if 'longitude' in options.keys() else None
+        
+        # Remove lat and/or lon if geom exists
+        if geom is not None and latitude is not None:
+            options.pop('latitude') 
+        if geom is not None and longitude is not None:
+            options.pop('longitude') 
+
+        # Check if geometry exists and try to create geometry from lat and lon
         if geom is None:
             if latitude==None or longitude==None:
                 raise ValueError("Argument geom or arguments latitude and longitude are mandatory.")
-
+            
             if (type(latitude) not in (float, int)) or (type(longitude) not in (float, int)):
                 raise ValueError("Arguments latitude and longitude must be numeric.")
 
@@ -165,20 +116,74 @@ class Coverage(dict):
             if longitude<-180.0 or longitude>180.0:
                 raise ValueError('longitude is out-of range [-180,180].')
 
-            geom = dict(type="Point", coordinates=[longitude, latitude])
+            options['geom'] = dict(type="Point", coordinates=[longitude, latitude])
 
-        data = self._service._time_series(coverage = self.name, 
-                                          attributes = attributes,
-                                          geom = geom,
-                                          start_datetime = start_datetime, 
-                                          end_datetime = end_datetime,
-                                          applyAttributeScale = applyAttributeScale,
-                                          pixelCollisionType = pixelCollisionType)
+        # If geometry is a string, convert to GeoJSON
+        elif isinstance(geom, str):
+            try:
+                options['geom'] = json.loads(geom)
+            except:
+                raise ValueError('Could not convert string geometry to GeoJSON.')
 
+        # If geometry is a shapely object, convert to GeoJSON
+        elif isinstance(geom, shapely.geometry.base.BaseGeometry):
+            options['geom'] = shapely.geometry.mapping(geom)
+        
+        # -------------------------------------------------------------------------
+        # Check start_datetime
+
+        if 'start_datetime' in options.keys():
+            try:
+                dt = parse(options['start_datetime'])
+                options['start_datetime'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            except:
+                raise ValueError('start_datetime could not be parsed.')
+
+
+        # -------------------------------------------------------------------------
+        # Check end_datetime
+
+        if 'end_datetime' in options.keys():
+            try:
+                dt = parse(options['end_datetime'])
+                options['end_datetime'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            except:
+                raise ValueError('end_datetime could not be parsed.')
+
+        # -------------------------------------------------------------------------
+        # Return options object checked
+        return options
+
+
+    def ts(self, **options):
+        """Retrieve the time series for a given location and time interval."""
+
+        # Check the parameters
+        options_checked = self._check_input_parameters(self, options)
+        
+        # Invoke timeseries request
+        data = self._service._retrieve_timeseries_or_summarize( coverage_name = self.name, 
+                                                                route = 'timeseries', 
+                                                                options = options_checked)
+
+        # Create timeseries object
         return TimeSeries(self, data)
 
+
     def summarize(self, **options):
-        """TODO: Implement"""
+        """Retrieve the summarized time series for a given location and time interval."""
+        
+        # Check the parameters
+        options_checked = self._check_input_parameters(self, options)
+
+        # Invoke timeseries request
+        data = self._service._retrieve_timeseries_or_summarize( coverage_name = self.name, 
+                                                                route = 'summarize', 
+                                                                options = options)
+
+        # Create Summarize object
+        return Summarize(self, data)
+
 
     def __str__(self):
         """Return the string representation of the Coverage object."""

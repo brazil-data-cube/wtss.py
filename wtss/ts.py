@@ -9,40 +9,46 @@
 """This example shows how to retrieve and plot a time series."""
 
 from wtss import *
+import os 
 
-service = WTSS(url='http://127.0.0.1:6000', access_token='TfQ9LCjX0Koate0zZi2U9xVwYux97JRy7f6gwNJjZF')
+BDC_AUTH_CLIENT_SECRET = os.getenv("BDC_AUTH_CLIENT_SECRET", None)
+WTSS_SERVER_URL = os.getenv("WTSS_SERVER_URL", None)
 
-coverage = service['MOD13Q1-6'] #['S2-SEN2COR_10_16D_STK-1']
+service = WTSS(url=WTSS_SERVER_URL, access_token=BDC_AUTH_CLIENT_SECRET)
 
+coverage = service['MOD13Q1-6']
 
-# Set geometry
-geom_json = {"type":"Polygon","coordinates":[[[-52.79548645019531,-28.29304474924502],[-52.780723571777344,-28.29304474924502],[-52.780723571777344,-28.283068128797773],[-52.79548645019531,-28.283068128797773],[-52.79548645019531,-28.29304474924502]]]}
-geom_str = '{"type":"Polygon","coordinates":[[[-52.79548645019531,-28.29304474924502],[-52.780723571777344,-28.29304474924502],[-52.780723571777344,-28.283068128797773],[-52.79548645019531,-28.283068128797773],[-52.79548645019531,-28.29304474924502]]]}'
+# Set geometry (geom can be a GeoJSON, a string or a shapely geometry)
+geom_json = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]}
+geom_str = '{"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]}'
 import shapely.geometry
 geom_shapely = shapely.geometry.shape(geom_json)
 
 
 # Invokes timeseries functionality
-ts = coverage.ts(attributes = ['NDVI','EVI'],
-                 geom = geom_json,
-                 end_datetime = '2017-02-01T00:00:00Z',
-                 start_datetime = '2017-01-01')
+timeseries = coverage.ts(attributes = ['NDVI','EVI'],
+                        geom = geom_str,
+                        #  longitude = -54,
+                        #  latitude = -12,
+                        start_datetime = '2017-01-01',
+                        end_datetime = '2017-02-01T00:00:00Z')
 
-print(ts.NDVI)
-print(ts.EVI)
-print(ts.timeline)
+print(timeseries.success_request)
+print(timeseries.NDVI)
+print(timeseries.EVI)
+print(timeseries.timeline)
 
 
 # Invokes summarize functionality
-sm = coverage.summarize(attributes = ['NDVI','EVI'],
-                        geom = geom,
-                        # latitude = 20,
-                        start_datetime = '2017-01-01T00:00:00Z', 
-                        end_datetime = '2017-02-01T00:00:00Z',
-                        applyAttributeScale = False)
+summarize = coverage.summarize( attributes = ['NDVI','EVI'],
+                                geom = geom_str,
+                                # longitude = -54,
+                                # latitude = -12,
+                                start_datetime = '2017-01-01T00:00:00Z', 
+                                end_datetime = '2017-02-01T00:00:00Z',
+                                applyAttributeScale = False)
 
-print(sm.NDVI['mean'])
-print(sm.EVI['median'])
-print(sm.timeline)
-
-# ts.plot(attributes=['NDVI'])
+print(summarize.success_request)
+print(summarize.NDVI['mean'])
+print(summarize.EVI['median'])
+print(summarize.timeline)

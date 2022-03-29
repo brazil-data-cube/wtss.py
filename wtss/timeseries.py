@@ -32,24 +32,28 @@ class TimeSeries(dict):
         super(TimeSeries, self).__init__(data or {})
 
         # add coverage attributes as object keys
-        attrs = data['results'][0]['time_series']['values']
-
-        for attr in attrs:
-            setattr(self, attr, attrs[attr])
+        if len(self['results']) > 0:
+            attributes = [attr_result for attr_result in self['results'][0]['time_series']['values'].items()]
+            for attr_name, aggr_results in attributes:
+                setattr(self, attr_name, aggr_results)
 
 
     @property
-    def timeline(self, as_date=False, fmt=''):
+    def timeline(self):
         """Return the timeline associated to the time series."""
-        return self['results'][0]['time_series']['timeline']
+        return self['results'][0]['time_series']['timeline'] if len(self['results'])>0 else None
 
+
+    @property
+    def success_request(self):
+        """Return a list with attribute names."""
+        return True if len(self['results'])>0 else False
+        
 
     @property
     def attributes(self):
         """Return a list with attribute names."""
-        attributes = [attr for attr in self['results'][0]['time_series']['values']]
-
-        return attributes
+        return [attr for attr in self['results'][0]['time_series']['values']] if len(self['results'])>0 else None
 
 
     def values(self, attr_name):

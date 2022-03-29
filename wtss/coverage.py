@@ -179,7 +179,7 @@ class Coverage(dict):
         # Invoke timeseries request
         data = self._service._retrieve_timeseries_or_summarize( coverage_name = self.name, 
                                                                 route = 'summarize', 
-                                                                options = options)
+                                                                options = options_checked)
 
         # Create Summarize object
         return Summarize(self, data)

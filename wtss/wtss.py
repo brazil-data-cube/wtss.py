@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2020 INPE.
+# Copyright (C) 2022 INPE.
 #
 # Python Client Library for WTSS is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -172,11 +172,10 @@ class WTSS:
                 >>> service = WTSS(WTSS_EXAMPLE_URL)
                 >>> service.MOD13Q1
                 Coverage...
-
         """
         try:
             return self[name]
-        except:
+        except KeyError:
             raise AttributeError(f'No attribute named "{name}"')
 
     def __iter__(self):
@@ -233,7 +232,7 @@ class WTSS:
         Args:
             url (str): URL for the WTSS server.
             op (str): WTSS operation.
-            params (dict): Dictionary, list of tuples or bytes to send
+            **params (dict): Dictionary, list of tuples or bytes to send
                 in the query string for the underlying ``Requests``.
 
         Returns:

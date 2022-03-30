@@ -57,6 +57,27 @@ class WTSS:
         parameters = dict(access_token=access_token)
         self._stac = Client.open(stac_url, headers=headers, parameters=parameters)
 
+        # Obtain available cubes, collections, classifications and mosaics
+        coverages = self._stac.get_collections()
+        cubes = []
+        collections = []
+        classifications = []
+        mosaics = []
+        for coverage in coverages:
+            if coverage.extra_fields['bdc:type'] == 'cube':
+                cubes.append(coverage.id)
+            if coverage.extra_fields['bdc:type'] == 'collection':
+                collections.append(coverage.id)
+            if coverage.extra_fields['bdc:type'] == 'classification':
+                classifications.append(coverage.id)
+            if coverage.extra_fields['bdc:type'] == 'mosaic':
+                mosaics.append(coverage.id)
+        
+        setattr(self, 'cubes', cubes)
+        setattr(self, 'collections', collections)
+        setattr(self, 'classifications', classifications)
+        setattr(self, 'mosaics', classifications)
+
     @property
     def coverages(self):
         """Return a list of coverage names.

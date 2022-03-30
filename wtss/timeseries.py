@@ -31,12 +31,46 @@ class TimeSeries(dict):
 
         super(TimeSeries, self).__init__(data or {})
 
-        # add coverage attributes as object keys
-        if len(self['results']) > 0:
-            attributes = [attr_result for attr_result in self['results'][0]['time_series']['values'].items()]
-            for attr_name, aggr_results in attributes:
-                setattr(self, attr_name, aggr_results)
+        # # add coverage attributes as object keys
+        # if len(self['results']) > 0:
+        #     attributes = [attr_result for attr_result in self['results'][0]['time_series']['values'].items()]
+        #     for attr_name, aggr_results in attributes:
+        #         setattr(self, attr_name, aggr_results)
 
+        # if len(self['results']) > 0:
+        #     attributes = [attr_result for attr_result in self['results'][0]['time_series']['values'].items()]
+        #     values = dict()
+        #     for attr_name, values0 in attributes:
+        #         values[attr_name] = values0
+        #     for i in range(0, len(self['results'])):
+        #         attributes = [attr_result for attr_result in self['results'][i]['time_series']['values'].items()]
+            
+        #     for i in range(0, len(self['results'])):
+        #         attributes = [attr_result for attr_result in self['results'][i]['time_series']['values'].items()]
+        #     for attr_name, aggr_results in attributes:
+        #         setattr(self, attr_name, aggr_results)
+
+
+
+        if len(self['results']) > 0:
+            # Get attribute names and first timeseries
+            values = dict()
+            attributes = [attrs for attrs in self['results'][0]['time_series']['values'].items()]
+            for attr_name, values0 in attributes:
+                values[attr_name] = [values0]
+            # Get remaining timeseries
+            for i in range(1, len(self['results'])):
+                attributes = [attrs for attrs in self['results'][i]['time_series']['values'].items()]
+                for attr_name, timeserie in attributes:
+                    values[attr_name].append(timeserie)
+            # Create self attributes with the results
+            for attr_name, all_timeseries in values.items():
+                setattr(self, attr_name, all_timeseries)
+
+    @property
+    def number_of_pixels(self):
+        """Return the number of pixels computed in timeseries."""
+        return len(self['results'])
 
     @property
     def timeline(self):

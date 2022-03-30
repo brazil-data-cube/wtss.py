@@ -9,7 +9,15 @@
 """A class that represents a Time Series in WTSS."""
 
 from pystac import Summaries
-from utils import render_html
+from .utils import render_html
+
+
+class SummarizeAttributeResult:
+    """A class that represents a summarized attribute."""
+
+    def __init__(self, aggr_results:dict):
+        for aggr_name, aggr_result in aggr_results:
+            setattr(self, aggr_name, aggr_result)
 
 
 class Summarize(dict):
@@ -34,8 +42,9 @@ class Summarize(dict):
         # add coverage attributes as object keys
         if len(self['results']['values']) > 0:
             attributes = [attr_result for attr_result in self['results']['values'].items()]
+            # For each attribute, create a property
             for attr_name, aggr_results in attributes:
-                setattr(self, attr_name, aggr_results)
+                setattr(self, attr_name, SummarizeAttributeResult( aggr_results.items() ))
 
 
     @property

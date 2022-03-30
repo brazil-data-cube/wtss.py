@@ -19,8 +19,8 @@ from urllib.parse import urljoin
 import requests
 from pystac_client import Client
 
-from coverage import Coverage
-from utils import render_html
+from .coverage import Coverage
+from .utils import render_html
 
 
 class WTSS:

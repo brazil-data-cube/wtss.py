@@ -8,10 +8,10 @@
 
 """A class that represents a coverage in WTSS."""
 
-from timeseries import TimeSeries
-from summarize import Summarize
-from utils import render_html
-import shapely
+from .timeseries import TimeSeries
+from .summarize import Summarize
+from .utils import render_html
+import shapely.geometry
 import json
 from dateutil.parser import parse
 

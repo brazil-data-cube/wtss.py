@@ -8,7 +8,7 @@
 
 """A class that represents a Time Series in WTSS."""
 
-from utils import render_html
+from .utils import render_html
 
 
 class TimeSeries(dict):

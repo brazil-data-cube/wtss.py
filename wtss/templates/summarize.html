@@ -1,0 +1,54 @@
+<div>
+    <div>
+        <b>Time Series</b> {{ summarize._coverage.name }}
+    </div>
+    
+    <br/>
+   
+    <div>
+        <b>Summarize:</b>
+    </div>
+    {% for attr_name in summarize.attributes -%}
+    <div>
+        <div>
+            <b>{{ attr_name }}</b>
+        </div>
+        <table>
+            <tr>
+            </tr>
+            <tr>
+                <th>datetime</th>
+                <th>min</th>
+                <th>max</th>
+                <th>mean</th>
+                <th>median</th>
+                <th>std</th>
+            </tr>
+            {% for datetime in summarize.timeline -%}
+            <tr>
+                <td>{{ datetime }}</td>
+                <td>{{ summarize[attr_name].min[loop.index0] }}</td>
+                <td>{{ summarize[attr_name].max[loop.index0] }}</td>
+                <td>{{ summarize[attr_name].mean[loop.index0] }}</td>
+                <td>{{ summarize[attr_name].median[loop.index0] }}</td>
+                <td>{{ summarize[attr_name].std[loop.index0] }}</td>
+            </tr>
+            {%- endfor %}
+        </table>
+    </div>
+    <br/>
+    {%- endfor %}
+
+    <br/>
+
+    <div>
+        <b>timeline</b>
+    </div>
+    <div>
+        <select id="timeline" size="10">
+        {% for d in summarize.timeline -%}
+            <option value="{d}">{{ d }}</option>
+        {%- endfor %}
+        </select>
+    </div>
+</div>

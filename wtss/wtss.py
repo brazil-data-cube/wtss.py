@@ -78,6 +78,7 @@ class WTSS:
         setattr(self, 'classifications', classifications)
         setattr(self, 'mosaics', classifications)
 
+
     @property
     def coverages(self):
         """Return a list of coverage names.
@@ -92,6 +93,7 @@ class WTSS:
         """
         collections = self._stac.get_collections()
         return [collection.id for collection in collections]
+
 
     def _retrieve_timeseries_or_summarize(self, coverage_name:str, route:str, options:dict):
         """Retrieve the time series for a given location.
@@ -151,6 +153,7 @@ class WTSS:
 
         return Coverage(service=self, metadata=collection.to_dict())
 
+
     def __getattr__(self, name):
         """Get coverage identified by name.
 
@@ -178,6 +181,7 @@ class WTSS:
         except KeyError:
             raise AttributeError(f'No attribute named "{name}"')
 
+
     def __iter__(self):
         """Iterate over coverages available in the service.
 
@@ -187,11 +191,13 @@ class WTSS:
         for cv_name in self.coverages:
             yield self[cv_name]
 
+
     def __str__(self):
         """Return the string representation of the WTSS object."""
         text = f'WTSS:\n\tURL: {self._url}'
 
         return text
+
 
     def __repr__(self):
         """Return the WTSS object representation."""
@@ -200,6 +206,7 @@ class WTSS:
                f'access_token={self._access_token})'
 
         return text
+
 
     def _ipython_key_completions_(self):
         """Integrate key completions for WTSS in IPython.
@@ -214,16 +221,17 @@ class WTSS:
         """
         return self.coverages
 
+
     def _repr_html_(self):
         """Display the WTSS object as HTML.
 
         This integrates a rich display in IPython.
         """
-        cv_list = self.coverages
-
-        html = render_html('wtss.html', url=self._url, coverages=cv_list)
+        # html = render_html('wtss.html', url=self._url, coverages=self.coverages)
+        html = render_html('wtss.html', service=self)
 
         return html
+
 
     @staticmethod
     def _request(url, op, params, method:str='post', headers=None):
@@ -245,7 +253,7 @@ class WTSS:
         """
         url_components = [url, op]
 
-        url = '/'.join(s.strip('/') for s in url_components)
+        url = '/'.join(s.rstrip('/') for s in url_components)
         verify = bool(strtobool(os.getenv('REQUEST_SSL_VERIFY', '1')))
 
         token = headers['x-api-key']

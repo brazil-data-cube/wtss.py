@@ -4,9 +4,10 @@
     </div>
     <br/>
     <div>
-        {% for attr in timeseries['result']['attributes'] -%}
+        {% for attr_name in timeseries.attributes -%}
         <div>
-            <b>{{ attr['attribute'] }}:</b> {{ attr['values'] }}
+            <b>{{ attr_name }}:</b> {{ timeseries[attr_name] }}
+            <br/>
         </div>
         {%- endfor %}
     </div>

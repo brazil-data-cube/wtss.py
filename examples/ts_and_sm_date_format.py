@@ -29,10 +29,8 @@ start_datetime and end_datetime values are valid in the following formats:
 --> RFC 3339 format: start_datetime = '2017-02-01T00:00:00Z'
 """
 
-geom_json = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]}
-
 timeseries = coverage.ts(attributes = ['NDVI','EVI'],
-                        geom = geom_json,
+                        geom = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]},
                         start_datetime = '2017-01-01',
                         end_datetime = '2017-02-01T00:00:00Z')
 
@@ -43,7 +41,7 @@ print('timeline:', timeseries.timeline)
 
 
 summarize = coverage.summarize( attributes = ['NDVI','EVI'],
-                                geom = geom_json,
+                                geom = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]},
                                 start_datetime = '2017-01-01', 
                                 end_datetime = '2017-02-01', 
                                 applyAttributeScale = False)

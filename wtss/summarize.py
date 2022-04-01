@@ -18,6 +18,10 @@ class SummarizeAttributeResult:
     def __init__(self, aggr_results:dict):
         for aggr_name, aggr_result in aggr_results:
             setattr(self, aggr_name, aggr_result)
+    
+    def values(self, attr_name):
+        """Return the time series for the given attribute."""
+        return getattr(self, attr_name)
 
 
 class Summarize(dict):
@@ -58,6 +62,12 @@ class Summarize(dict):
         """Return a list with attribute names."""
         return [attr for attr in self['results']['values'].keys()] if len(self['results']['values'])>0 else None
 
+    
+    @property
+    def geometry(self):
+        """Return the geometry used to query."""
+        return self['query']['geom']
+
 
     @property
     def success_request(self):
@@ -70,6 +80,37 @@ class Summarize(dict):
         return getattr(self, attr_name)
 
 
+    def pandas_dataframe(self, **options):
+        try:
+            import pandas as pd
+            import matplotlib.pyplot as plt
+        except:
+            raise ImportError('Cannot import one of the following libraries: [pandas, matplotlib].')
+
+        # Build the dataframe in a tibble format
+        attrs = []
+        aggrs = []
+        datetimes = []
+        values = []
+        for attr_name in self.attributes:
+            for i in range(0, len(self.timeline)):
+                for aggr_name in ['min','max','mean','median','std']:
+                    datetimes.append(self.timeline[i])
+                    attrs.append(attr_name)
+                    aggrs.append(aggr_name)
+                    values.append(self.values(attr_name).values(aggr_name)[i])
+
+        df = pd.DataFrame({
+            'attribute': attrs,
+            'aggregation': aggrs,
+            'datetime': pd.to_datetime(datetimes, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
+            'value': values,
+        })
+        
+        return df
+
+
+    
     def plot(self, **options):
         """Plot the time series on a chart.
 
@@ -84,67 +125,69 @@ class Summarize(dict):
         Raises:
             ImportError: If Maptplotlib or Numpy can no be imported.
 
-        Example:
-
-            Plot the time series of MODIS13Q1 data product:
-
-            .. doctest::
-                :skipif: True
-
-                >>> from wtss import *
-                >>> service = WTSS(WTSS_EXAMPLE_URL)
-                >>> coverage = service['MOD13Q1']
-                >>> ts = coverage.ts(attributes=('red', 'nir'),
-                ...                  latitude=-12.0, longitude=-54.0,
-                ...                  start_datetime='2001-01-01', end_datetime='2001-12-31')
-                ...
-                >>> ts.plot()
-
-            This will produce the following time series plot:
-
-            .. image:: ./img/ts_plot.png
-                :alt: Time Series
-                :width: 640px
-
         .. note::
-
             You should have Matplotlib and Numpy installed.
             See :ref:`wtss.py install notes <Installation>` for more information.
         """
         try:
             import matplotlib.pyplot as plt
             import numpy as np
+            import datetime as dt
         except:
-            raise ImportError('You should install Matplotlib and Numpy!')
+            raise ImportError('Could not import some of the packages [matplotlib, numpy, datetime].')
 
         fig, ax = plt.subplots()
-
-        plt.title(f'Coverage {self._coverage["name"]}', fontsize=24)
-
+        plt.title(f'{self._coverage.name}', fontsize=20)
         plt.xlabel('Date', fontsize=16)
-        plt.ylabel('Surface Reflectance', fontsize=16)
+        plt.ylabel('Value', fontsize=16)
 
         x = self.timeline
+        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
 
-        plt.xticks(np.linspace(0, len(x), num=10))
+        attributes = options['attributes'] if 'attributes' in options else self.attributes
+        aggregation = options['aggregation'] if 'aggregation' in options else 'mean'
 
-        attrs = options['attributes'] if 'attributes' in options else self.attributes
-
-        for attr in attrs:
-            y = self.values(attr)
-
-            ax.plot(x, y,
-                    ls='-',
-                    marker='o',
-                    linewidth=1.0,
-                    label=attr)
+        for attr in attributes:
+            y = self.values(attr).values(aggregation)
+            ax.plot(x, y, ls='-', linewidth=1.5, label=attr)
 
         plt.legend()
-
         plt.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
 
         fig.autofmt_xdate()
+        plt.show()
 
+
+    def plot_mean_std(self, **options):
+        try:
+            import matplotlib.pyplot as plt
+            import numpy as np
+            import datetime as dt
+        except:
+            raise ImportError('Could not import some of the packages [matplotlib, numpy, datetime].')
+
+        fig, ax = plt.subplots()
+        plt.title(f'{self._coverage.name}', fontsize=20)
+        plt.xlabel('Date', fontsize=16)
+        plt.ylabel('Value', fontsize=16)
+
+        x = self.timeline
+        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
+
+        attribute = options['attribute'] if 'attribute' in options else self.attributes
+
+        mean = self.values(attribute).values('mean')
+        std = self.values(attribute).values('std')
+        mean_add_std = sum = [x+y for (x,y) in zip(mean, std)]
+        mean_sub_std = sum = [x-y for (x,y) in zip(mean, std)]
+
+        ax.plot(x, mean, ls='-', linewidth=1.5, label='mean', color='darkgreen')
+        ax.plot(x, mean_add_std, ls='--', linewidth=1, label='mean + std', color='red')
+        ax.plot(x, mean_sub_std, ls='--', linewidth=1, label='mean - std', color='red')
+
+        plt.legend()
+
+        fig.autofmt_xdate()
         plt.show()
 
 
@@ -154,10 +197,10 @@ class Summarize(dict):
 
 
     def _repr_html_(self):
-        """Display the time series as a HTML.
+        """Display the summarized time series as a HTML.
 
         This integrates a rich display in IPython.
         """
-        html = render_html('timeseries.html', timeseries=self)
+        html = render_html('summarize.html', summarize=self)
 
         return html

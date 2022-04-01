@@ -1,10 +1,18 @@
-<p>WTSS</p>
-<ul>
-    <li><b>URL:</b> {{ url }}</li>
-    <li><b>Coverages:</b></li>
-    <ul>
-    {% for cv in coverages -%}
-        <li>{{ cv }}</li>
-    {%- endfor %}
-    </ul>
-</ul>
+<div>
+    <div>
+        <b>WTSS</b>
+    </div>
+    <br/>
+
+    <div>
+        <ul>
+            <!-- <li><b>URL:</b> {{ service._url }}</li> -->
+            <li><b>Coverages:</b></li>
+            <ul>
+                {% for cv in service.coverages -%}
+                    <li>{{ cv }}</li>
+                {%- endfor %}
+            </ul>
+        </ul>
+    </div>
+</div>

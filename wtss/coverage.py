@@ -41,7 +41,8 @@ class Coverage(dict):
     @property
     def attributes(self):
         """Return the list of coverage attributes."""
-        return [band['name'] for band in self['properties']['eo:bands']]
+        # return [band['name'] for band in self['properties']['eo:bands']]
+        return [band for band in self['properties']['eo:bands']]
 
 
     @property

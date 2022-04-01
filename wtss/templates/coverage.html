@@ -1,6 +1,6 @@
 <div>
     <div>
-        <b>Coverage</b> {{ coverage.name }}
+        <b>Coverage Name:</b> {{ coverage.name }}
     </div>
     <br/>
     <div>
@@ -8,7 +8,7 @@
     </div>
     <br/>
     <div>
-        <b>Attributes</b>
+        <b>Attributes:</b>
     </div>
     <div>
         <table>
@@ -18,20 +18,26 @@
                 <th>name</th>
                 <th>common name</th>
                 <th>description</th>
-                <th>datatype</th>
-                <th>valid range</th>
-                <th>scale</th>
+                <th>min</th>
+                <th>max</th>
                 <th>nodata</th>
+                <th>scale</th>
+                <th>center_wavelength</th>
+                <th>full_width_half_max</th>
+                <th>data_type</th>
             </tr>
             {% for attr in coverage['attributes'] -%}
             <tr>
                 <td>{{ attr['name'] }}</td>
                 <td>{{ attr['common_name'] }}</td>
                 <td>{{ attr['description'] }}</td>
-                <td>{{ attr['datatype'] }}</td>
-                <td>{{ attr['valid_range'] }}</td>
-                <td>{{ attr['scale_factor'] }}</td>
-                <td>{{ attr['missing_value'] }}</td>
+                <td>{{ attr['min'] }}</td>
+                <td>{{ attr['max'] }}</td>
+                <td>{{ attr['nodata'] }}</td>
+                <td>{{ attr['scale'] }}</td>
+                <td>{{ attr['center_wavelength'] }}</td>
+                <td>{{ attr['full_width_half_max'] }}</td>
+                <td>{{ attr['data_type'] }}</td>
             </tr>
             {%- endfor %}
         </table>
@@ -49,10 +55,10 @@
                 <th>ymax</th>
             </tr>
              <tr>
-                 <td>{{ coverage['spatial_extent']['xmin'] }}</td>
-                 <td>{{ coverage['spatial_extent']['ymin'] }}</td>
-                 <td>{{ coverage['spatial_extent']['xmax'] }}</td>
-                 <td>{{ coverage['spatial_extent']['ymax'] }}</td>
+                 <td>{{ coverage['spatial_extent'][0] }}</td>
+                 <td>{{ coverage['spatial_extent'][1] }}</td>
+                 <td>{{ coverage['spatial_extent'][2] }}</td>
+                 <td>{{ coverage['spatial_extent'][3] }}</td>
              </tr>
         </table>
     </div>
@@ -60,7 +66,6 @@
     <div>
         <b>Timeline</b>
     </div>
-    <div>
         <select id="timeline" size="10">
         {% for d in coverage['timeline'] -%}
             <option value="{d}">{{ d }}</option>

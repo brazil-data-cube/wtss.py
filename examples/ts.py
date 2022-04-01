@@ -18,10 +18,8 @@ service = WTSS(url=WTSS_SERVER_URL, access_token=BDC_AUTH_CLIENT_SECRET)
 
 coverage = service['MOD13Q1-6']
 
-geom_json = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]}
-
 timeseries = coverage.ts(attributes = ['NDVI','EVI'],
-                        geom = geom_json,
+                        geom = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]},
                         #  longitude = -54,
                         #  latitude = -12,
                         start_datetime = '2017-01-01',

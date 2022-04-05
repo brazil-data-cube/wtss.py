@@ -8,12 +8,14 @@
 
 """A class that represents a coverage in WTSS."""
 
-from .timeseries import TimeSeries
-from .summarize import Summarize
-from .utils import render_html
-import shapely.geometry
 import json
+
+import shapely.geometry
 from dateutil.parser import parse
+
+from .summarize import Summarize
+from .timeseries import TimeSeries
+from .utils import render_html
 
 
 class Coverage(dict):
@@ -158,7 +160,6 @@ class Coverage(dict):
 
     def ts(self, **options):
         """Retrieve the time series for a given location and time interval."""
-
         # Check the parameters
         options_checked = self._check_input_parameters(self, options)
         
@@ -173,7 +174,6 @@ class Coverage(dict):
 
     def summarize(self, **options):
         """Retrieve the summarized time series for a given location and time interval."""
-        
         # Check the parameters
         options_checked = self._check_input_parameters(self, options)
 

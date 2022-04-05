@@ -8,7 +8,10 @@
 
 """A class that represents a Time Series in WTSS."""
 
+from logging import raiseExceptions
+
 from pystac import Summaries
+
 from .utils import render_html
 
 
@@ -16,16 +19,17 @@ class SummarizeAttributeResult:
     """A class that represents a summarized attribute."""
 
     def __init__(self, aggr_results:dict):
+        """Set all aggregation results as object properties."""
         for aggr_name, aggr_result in aggr_results:
             setattr(self, aggr_name, aggr_result)
     
     def values(self, attr_name):
-        """Return the time series for the given attribute."""
+        """Return the value of a given property of object."""
         return getattr(self, attr_name)
 
 
 class Summarize(dict):
-    """A class that represents a summarized timeseries in WTSS.
+    """A class that represents a summarized timeseries.
 
     .. note::
         For more information about time series definition, please, refer to
@@ -33,7 +37,7 @@ class Summarize(dict):
     """
 
     def __init__(self, coverage, data):
-        """Create a TimeSeries object associated to a coverage.
+        """Create a Summarized TimeSeries object associated to a coverage.
 
         Args:
             coverage (Coverage): The coverage that this time series belongs to.
@@ -43,7 +47,7 @@ class Summarize(dict):
 
         super(Summarize, self).__init__(data or {})
 
-        # add coverage attributes as object keys
+        # Add coverage attributes as object property
         if len(self['results']['values']) > 0:
             attributes = [attr_result for attr_result in self['results']['values'].items()]
             # For each attribute, create a property
@@ -62,6 +66,12 @@ class Summarize(dict):
         """Return a list with attribute names."""
         return [attr for attr in self['results']['values'].keys()] if len(self['results']['values'])>0 else None
 
+
+    @property
+    def aggregations(self):
+        """Return a list with attribute names."""
+        return self['query']['aggregations'] if 'aggregations' in self['query'].keys() else ['min','max','mean','median','std']
+
     
     @property
     def geometry(self):
@@ -76,16 +86,21 @@ class Summarize(dict):
 
 
     def values(self, attr_name):
-        """Return the time series for the given attribute."""
+        """Return the value of a given property of object."""
         return getattr(self, attr_name)
 
 
-    def pandas_dataframe(self, **options):
+    def pandas_dataframe(self):
+        """Create a pandas dataframe with summarized data.
+
+        Raises:
+            ImportError: If Pandas or Maptplotlib could not be imported.
+        """
         try:
-            import pandas as pd
             import matplotlib.pyplot as plt
+            import pandas as pd
         except:
-            raise ImportError('Cannot import one of the following libraries: [pandas, matplotlib].')
+            raise ImportError('Cannot import one of the following libraries: [matplotlib, pandas].')
 
         # Build the dataframe in a tibble format
         attrs = []
@@ -94,7 +109,7 @@ class Summarize(dict):
         values = []
         for attr_name in self.attributes:
             for i in range(0, len(self.timeline)):
-                for aggr_name in ['min','max','mean','median','std']:
+                for aggr_name in self.aggregations:
                     datetimes.append(self.timeline[i])
                     attrs.append(attr_name)
                     aggrs.append(aggr_name)
@@ -115,78 +130,99 @@ class Summarize(dict):
         """Plot the time series on a chart.
 
         Keyword Args:
-            attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
-            line_styles (sequence): Not implemented yet.
-            markers (sequence): Not implemented yet.
-            line_width (numeric): Not implemented yet.
-            line_widths (sequence): Not implemented yet,
-            labels (sequence): Not implemented yet.
+            attributes (list): A list like ['EVI','NDVI']
+            aggregation (str): Desired aggregation to plot (e.g. 'mean')
 
         Raises:
-            ImportError: If Maptplotlib or Numpy can no be imported.
-
-        .. note::
-            You should have Matplotlib and Numpy installed.
-            See :ref:`wtss.py install notes <Installation>` for more information.
+            ImportError: If Maptplotlib or Numpy or datetime could not be imported.
         """
         try:
+            import datetime as dt
+
             import matplotlib.pyplot as plt
             import numpy as np
-            import datetime as dt
         except:
-            raise ImportError('Could not import some of the packages [matplotlib, numpy, datetime].')
+            raise ImportError('Could not import some of the packages [datetime, matplotlib, numpy].')
 
-        fig, ax = plt.subplots()
-        plt.title(f'{self._coverage.name}', fontsize=20)
-        plt.xlabel('Date', fontsize=16)
-        plt.ylabel('Value', fontsize=16)
+        # Check options (only valid are 'attributes' and 'aggregation')
+        for option in options:
+            if option!='attributes' and option!='aggregation':
+                raise Exception('Only available options are "attributes" and "aggregation"')
 
-        x = self.timeline
-        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
-
+        # Get attributes value if user defined, otherwise use all available
         attributes = options['attributes'] if 'attributes' in options else self.attributes
-        aggregation = options['aggregation'] if 'aggregation' in options else 'mean'
+        if not isinstance(attributes, list):
+            raise Exception('attributes must be a list', attributes)
 
+        # Get aggregation value if user defined, otherwise use 'mean'
+        aggregation = options['aggregation'] if 'aggregation' in options else 'mean'
+        if not isinstance(aggregation, str):
+            raise Exception('aggregation must be a string', aggregation)
+
+        # Create plot
+        fig, ax = plt.subplots()
+
+        # Add timeserie for each attribute
+        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
         for attr in attributes:
             y = self.values(attr).values(aggregation)
             ax.plot(x, y, ls='-', linewidth=1.5, label=attr)
 
+        # Define plot properties and show plot
+        plt.title(f'{self._coverage.name}', fontsize=20)
+        plt.xlabel('Date', fontsize=16)
+        plt.ylabel('Value', fontsize=16)
         plt.legend()
         plt.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
-
         fig.autofmt_xdate()
         plt.show()
 
 
     def plot_mean_std(self, **options):
+        """Plot the mean and std of a desired attribute.
+
+        Keyword Args:
+            attribute (str): Desired attribute to plot (e.g. 'NDVI')
+
+        Raises:
+            ImportError: If Maptplotlib or Numpy or datetime could not be imported.
+        """
         try:
+            import datetime as dt
+
             import matplotlib.pyplot as plt
             import numpy as np
-            import datetime as dt
         except:
-            raise ImportError('Could not import some of the packages [matplotlib, numpy, datetime].')
+            raise ImportError('Could not import some of the packages [datetime, matplotlib, numpy].')
 
+        # Check options (only valid is 'attribute')
+        for option in options:
+            if option!='attribute':
+                raise Exception('Only available options is "attribute"')
+
+        # Get attribute value if user set, or use the first
+        attribute = options['attribute'] if 'attribute' in options else self.attributes[0]
+        if not isinstance(attribute, str):
+            raise Exception('attribute must be a string', attribute)
+        
+        # Create plot
         fig, ax = plt.subplots()
-        plt.title(f'{self._coverage.name}', fontsize=20)
-        plt.xlabel('Date', fontsize=16)
-        plt.ylabel('Value', fontsize=16)
 
-        x = self.timeline
+        # Add mean, mean+std and mean-std timeserie
         x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
-
-        attribute = options['attribute'] if 'attribute' in options else self.attributes
-
         mean = self.values(attribute).values('mean')
         std = self.values(attribute).values('std')
-        mean_add_std = sum = [x+y for (x,y) in zip(mean, std)]
-        mean_sub_std = sum = [x-y for (x,y) in zip(mean, std)]
-
+        mean_add_std = [x+y for (x,y) in zip(mean, std)]
+        mean_sub_std = [x-y for (x,y) in zip(mean, std)]
         ax.plot(x, mean, ls='-', linewidth=1.5, label='mean', color='darkgreen')
         ax.plot(x, mean_add_std, ls='--', linewidth=1, label='mean + std', color='red')
         ax.plot(x, mean_sub_std, ls='--', linewidth=1, label='mean - std', color='red')
 
+        # Define plot properties and show plot
+        plt.title(f'{self._coverage.name}', fontsize=20)
+        plt.xlabel('Date', fontsize=16)
+        plt.ylabel(attribute, fontsize=16)
         plt.legend()
-
         fig.autofmt_xdate()
         plt.show()
 
@@ -198,7 +234,7 @@ class Summarize(dict):
 
     def _repr_html_(self):
         """Display the summarized time series as a HTML.
-
+        
         This integrates a rich display in IPython.
         """
         html = render_html('summarize.html', summarize=self)

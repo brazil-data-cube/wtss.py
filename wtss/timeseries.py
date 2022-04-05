@@ -31,27 +31,7 @@ class TimeSeries(dict):
 
         super(TimeSeries, self).__init__(data or {})
 
-        # # add coverage attributes as object keys
-        # if len(self['results']) > 0:
-        #     attributes = [attr_result for attr_result in self['results'][0]['time_series']['values'].items()]
-        #     for attr_name, aggr_results in attributes:
-        #         setattr(self, attr_name, aggr_results)
-
-        # if len(self['results']) > 0:
-        #     attributes = [attr_result for attr_result in self['results'][0]['time_series']['values'].items()]
-        #     values = dict()
-        #     for attr_name, values0 in attributes:
-        #         values[attr_name] = values0
-        #     for i in range(0, len(self['results'])):
-        #         attributes = [attr_result for attr_result in self['results'][i]['time_series']['values'].items()]
-            
-        #     for i in range(0, len(self['results'])):
-        #         attributes = [attr_result for attr_result in self['results'][i]['time_series']['values'].items()]
-        #     for attr_name, aggr_results in attributes:
-        #         setattr(self, attr_name, aggr_results)
-
-
-
+        # Add all timeseries from an attribute as object property
         if len(self['results']) > 0:
             # Get attribute names and first timeseries
             values = dict()
@@ -66,6 +46,7 @@ class TimeSeries(dict):
             # Create self attributes with the results
             for attr_name, all_timeseries in values.items():
                 setattr(self, attr_name, all_timeseries)
+
 
     @property
     def number_of_pixels(self):
@@ -95,81 +76,85 @@ class TimeSeries(dict):
         return getattr(self, attr_name)
 
 
+    def pandas_dataframe(self):
+        """Create a pandas dataframe with timeseries data.
+
+        Raises:
+            ImportError: If Pandas or Maptplotlib could not be imported.
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import pandas as pd
+        except:
+            raise ImportError('Cannot import one of the following libraries: [pandas, matplotlib].')
+
+        # Build the dataframe in a tibble format
+        attrs = []
+        aggrs = []
+        datetimes = []
+        values = []
+        for attr_name in self.attributes:
+            for pixel_timeserie in self.values(attr_name):
+                for i in range(0, len(self.timeline)):
+                    datetimes.append(self.timeline[i])
+                    attrs.append(attr_name)
+                    values.append(pixel_timeserie[i])
+
+        df = pd.DataFrame({
+            'attribute': attrs,
+            'datetime': pd.to_datetime(datetimes, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
+            'value': values,
+        })
+        
+        return df
+
+
     def plot(self, **options):
         """Plot the time series on a chart.
 
         Keyword Args:
-            attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
-            line_styles (sequence): Not implemented yet.
-            markers (sequence): Not implemented yet.
-            line_width (numeric): Not implemented yet.
-            line_widths (sequence): Not implemented yet,
-            labels (sequence): Not implemented yet.
+            attribute (string): An attribute, like 'EVI' or 'EVI'.
 
         Raises:
-            ImportError: If Maptplotlib or Numpy can no be imported.
-
-        Example:
-
-            Plot the time series of MODIS13Q1 data product:
-
-            .. doctest::
-                :skipif: True
-
-                >>> from wtss import *
-                >>> service = WTSS(WTSS_EXAMPLE_URL)
-                >>> coverage = service['MOD13Q1']
-                >>> ts = coverage.ts(attributes=('red', 'nir'),
-                ...                  latitude=-12.0, longitude=-54.0,
-                ...                  start_datetime='2001-01-01', end_datetime='2001-12-31')
-                ...
-                >>> ts.plot()
-
-            This will produce the following time series plot:
-
-            .. image:: ./img/ts_plot.png
-                :alt: Time Series
-                :width: 640px
+            ImportError: If Maptplotlib or Numpy or Datetime could not be imported.
 
         .. note::
-
             You should have Matplotlib and Numpy installed.
             See :ref:`wtss.py install notes <Installation>` for more information.
         """
         try:
+            import datetime as dt
+
             import matplotlib.pyplot as plt
             import numpy as np
         except:
-            raise ImportError('You should install Matplotlib and Numpy!')
+            raise ImportError('Could not import some of the packages [datetime, matplotlib, numpy].')
 
+        # Check options (only valid is 'attributes')
+        for option in options:
+            if option!='attribute':
+                raise Exception('Only available options is "attribute"')
+
+        # Get attribute value if user defined, otherwise use the first
+        attribute = options['attribute'] if 'attribute' in options else self.attributes[0]
+        if not isinstance(attribute, str):
+            raise Exception('attributes must be a string', attribute)
+
+        # Create plot
         fig, ax = plt.subplots()
 
-        plt.title(f'Coverage {self._coverage["name"]}', fontsize=24)
+        # Add timeserie for each pixel
+        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
+        attribute_timeseries = self.values(attribute)
+        for pixel_ts in attribute_timeseries:
+            ax.plot(x, pixel_ts, ls='-', linewidth=1.5)
 
+        # Define plot properties and show plot
+        plt.title(f'{self._coverage.name}', fontsize=20)
         plt.xlabel('Date', fontsize=16)
-        plt.ylabel('Surface Reflectance', fontsize=16)
-
-        x = self.timeline
-
-        plt.xticks(np.linspace(0, len(x), num=10))
-
-        attrs = options['attributes'] if 'attributes' in options else self.attributes
-
-        for attr in attrs:
-            y = self.values(attr)
-
-            ax.plot(x, y,
-                    ls='-',
-                    marker='o',
-                    linewidth=1.0,
-                    label=attr)
-
-        plt.legend()
-
+        plt.ylabel(attribute, fontsize=16)
         plt.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
-
         fig.autofmt_xdate()
-
         plt.show()
 
 

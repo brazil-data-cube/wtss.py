@@ -115,7 +115,7 @@ class WTSS:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        url = urljoin(self._url.rstrip('/') + '/', coverage_name)
+        url = urljoin(self._url.strip('/') + '/', coverage_name)
         headers = {'x-api-key': self._access_token}
         request_result = WTSS._request( url,
                                         method='post',
@@ -253,7 +253,7 @@ class WTSS:
         """
         url_components = [url, op]
 
-        url = '/'.join(s.rstrip('/') for s in url_components)
+        url = '/'.join(s.strip('/') for s in url_components)
         verify = bool(strtobool(os.getenv('REQUEST_SSL_VERIFY', '1')))
 
         token = headers['x-api-key']

@@ -18,21 +18,19 @@
             </tr>
             <tr>
                 <th>datetime</th>
-                <th>min</th>
-                <th>max</th>
-                <th>mean</th>
-                <th>median</th>
-                <th>std</th>
+                {% for aggregation in summarize.aggregations -%}
+                    <th>{{ aggregation }}</th>
+                {%- endfor %}
             </tr>
+
             {% for datetime in summarize.timeline -%}
-            <tr>
-                <td>{{ datetime }}</td>
-                <td>{{ summarize[attr_name].min[loop.index0] }}</td>
-                <td>{{ summarize[attr_name].max[loop.index0] }}</td>
-                <td>{{ summarize[attr_name].mean[loop.index0] }}</td>
-                <td>{{ summarize[attr_name].median[loop.index0] }}</td>
-                <td>{{ summarize[attr_name].std[loop.index0] }}</td>
-            </tr>
+                {% set outer_loop = loop %}
+                <tr>
+                    <td>{{ datetime }}</td>
+                    {% for aggregation in summarize.aggregations -%}
+                        <td>{{ summarize.values(attr_name).values(aggregation)[outer_loop.index0] }}</td>
+                    {%- endfor %}
+                </tr>
             {%- endfor %}
         </table>
     </div>

@@ -8,8 +8,9 @@
 
 """This example shows how to query data with lat long."""
 
+import os
+
 from wtss import *
-import os 
 
 BDC_AUTH_CLIENT_SECRET = os.getenv("BDC_AUTH_CLIENT_SECRET", None)
 WTSS_SERVER_URL = os.getenv("WTSS_SERVER_URL", None)

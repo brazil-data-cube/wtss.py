@@ -8,9 +8,11 @@
 
 """This example shows how to use a shapely geometry for the request."""
 
-from wtss import *
-import os 
+import os
+
 import shapely.geometry
+
+from wtss import *
 
 BDC_AUTH_CLIENT_SECRET = os.getenv("BDC_AUTH_CLIENT_SECRET", None)
 WTSS_SERVER_URL = os.getenv("WTSS_SERVER_URL", None)

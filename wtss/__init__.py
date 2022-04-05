@@ -8,9 +8,9 @@
 
 """Python Client Library for WTSS."""
 
-from .version import __version__
 from .coverage import Coverage
 from .timeseries import TimeSeries
+from .version import __version__
 from .wtss import WTSS
 
 __all__ = (

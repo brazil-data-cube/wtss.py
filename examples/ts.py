@@ -8,8 +8,9 @@
 
 """This example shows how to retrieve a time series."""
 
+import os
+
 from wtss import *
-import os 
 
 BDC_AUTH_CLIENT_SECRET = os.getenv("BDC_AUTH_CLIENT_SECRET", None)
 WTSS_SERVER_URL = os.getenv("WTSS_SERVER_URL", None)
@@ -29,3 +30,6 @@ print('\nnumber_of_pixels:', timeseries.number_of_pixels)
 print('\nNDVI:', timeseries.NDVI)
 print('\nEVI:', timeseries.EVI)
 print('\ntimeline:', timeseries.timeline)
+
+
+timeseries.plot(attribute=['NDVI'])

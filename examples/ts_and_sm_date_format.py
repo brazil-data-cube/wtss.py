@@ -45,9 +45,9 @@ print('timeline:', timeseries.timeline)
 summarize = coverage.summarize( attributes = ['NDVI','EVI'],
                                 geom = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]},
                                 start_datetime = '2017-01-01', 
-                                end_datetime = '2017-02-01', 
-                                applyAttributeScale = False)
+                                end_datetime = '2017-02-01')
 
 print('\nSUMMARIZE:')
 print('NDVI mean:', summarize.NDVI.mean)
 print('timeline:', summarize.timeline)
+

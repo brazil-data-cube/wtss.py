@@ -31,8 +31,12 @@ class TimeSeries(dict):
 
         super(TimeSeries, self).__init__(data or {})
 
+        # Verify if query returned timeseries
+        success_query = True if len(self['results']) > 0 else False
+        setattr(self, 'success_query', success_query)
+
         # Add all timeseries from an attribute as object property
-        if len(self['results']) > 0:
+        if success_query:
             # Get attribute names and first timeseries
             values = dict()
             attributes = [attrs for attrs in self['results'][0]['time_series']['values'].items()]
@@ -56,19 +60,19 @@ class TimeSeries(dict):
     @property
     def timeline(self):
         """Return the timeline associated to the time series."""
-        return self['results'][0]['time_series']['timeline'] if len(self['results'])>0 else None
+        return self['results'][0]['time_series']['timeline'] if self.success_query else None
 
 
     @property
     def success_request(self):
         """Return a list with attribute names."""
-        return True if len(self['results'])>0 else False
+        return True if self.success_query else False
         
 
     @property
     def attributes(self):
         """Return a list with attribute names."""
-        return [attr for attr in self['results'][0]['time_series']['values']] if len(self['results'])>0 else None
+        return [attr for attr in self['results'][0]['time_series']['values']] if self.success_query else None
 
 
     def values(self, attr_name):

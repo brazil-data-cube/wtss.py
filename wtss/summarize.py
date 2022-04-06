@@ -47,8 +47,12 @@ class Summarize(dict):
 
         super(Summarize, self).__init__(data or {})
 
+        # Verify if query returned timeseries
+        success_query = True if len(self['results']['values']) > 0 else False
+        setattr(self, 'success_query', success_query)
+
         # Add coverage attributes as object property
-        if len(self['results']['values']) > 0:
+        if success_query:
             attributes = [attr_result for attr_result in self['results']['values'].items()]
             # For each attribute, create a property
             for attr_name, aggr_results in attributes:
@@ -58,13 +62,13 @@ class Summarize(dict):
     @property
     def timeline(self, as_date=False, fmt=''):
         """Return the timeline associated to the time series."""
-        return self['results']['timeline'] if len(self['results']['timeline'])>0 else None
+        return self['results']['timeline'] if self.success_query else None
 
 
     @property
     def attributes(self):
         """Return a list with attribute names."""
-        return [attr for attr in self['results']['values'].keys()] if len(self['results']['values'])>0 else None
+        return [attr for attr in self['results']['values'].keys()] if self.success_query else None
 
 
     @property
@@ -77,12 +81,6 @@ class Summarize(dict):
     def geometry(self):
         """Return the geometry used to query."""
         return self['query']['geom']
-
-
-    @property
-    def success_request(self):
-        """Return a list with attribute names."""
-        return True if len(self['results']['values'])>0 else False
 
 
     def values(self, attr_name):
@@ -121,9 +119,8 @@ class Summarize(dict):
             'datetime': pd.to_datetime(datetimes, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
             'value': values,
         })
-        
-        return df
 
+        return df
 
     
     def plot(self, **options):

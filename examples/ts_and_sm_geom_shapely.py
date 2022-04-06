@@ -22,15 +22,14 @@ service = WTSS(url=WTSS_SERVER_URL, access_token=BDC_AUTH_CLIENT_SECRET)
 coverage = service['MOD13Q1-6']
 
 """
-geometry can be a GeoJSON, a GeoJSON string or a shapely object.
-Also, you can use latitude and longitude parameters instead of geom.
+geometry can be a GeoJSON, a GeoJSON string or a shapely object. Also,
+you can use latitude and longitude parameters instead of geom.
 
-In this example, the geometry is a shapely object that is created
-based on a GeoJSON, but it could be a shapefile.
+In this example, the geometry is a shapely object that is created based
+on a GeoJSON, but it could be an shapely object based on a shapefile.
 """
 
-geom_json = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]}
-geom_shapely = shapely.geometry.shape(geom_json)
+geom_shapely = shapely.geometry.shape({"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]})
 
 
 timeseries = coverage.ts(attributes = ['NDVI','EVI'],

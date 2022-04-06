@@ -1,44 +1,13 @@
 <div>
     <div>
-        <b>Time Series</b> {{ summarize._coverage.name }}
+        <b>Summarize:</b> {{ summarize._coverage.name }}
     </div>
     
-    <br/>
-   
-    <div>
-        <b>Summarize:</b>
-    </div>
-    {% for attr_name in summarize.attributes -%}
-    <div>
-        <div>
-            <b>{{ attr_name }}</b>
-        </div>
-        <table>
-            <tr>
-            </tr>
-            <tr>
-                <th>datetime</th>
-                {% for aggregation in summarize.aggregations -%}
-                    <th>{{ aggregation }}</th>
-                {%- endfor %}
-            </tr>
-
-            {% for datetime in summarize.timeline -%}
-                {% set outer_loop = loop %}
-                <tr>
-                    <td>{{ datetime }}</td>
-                    {% for aggregation in summarize.aggregations -%}
-                        <td>{{ summarize.values(attr_name).values(aggregation)[outer_loop.index0] }}</td>
-                    {%- endfor %}
-                </tr>
-            {%- endfor %}
-        </table>
-    </div>
-    <br/>
-    {%- endfor %}
 
     <br/>
+    
 
+    <!-- Print the timeline -->
     <div>
         <b>timeline</b>
     </div>
@@ -49,4 +18,51 @@
         {%- endfor %}
         </select>
     </div>
+    
+    
+    <br/>
+
+
+    <div>
+        <b>Summarize:</b>
+    </div>
+    <!-- Print the table for each attribute -->
+    {% for attr_name in summarize.attributes -%}
+    <div>
+        <div>
+            <b>{{ attr_name }}</b>
+        </div>
+        <table>
+            <!-- Set the columns names -->
+            <tr>
+                <th>datetime</th>
+                {% for aggregation in summarize.aggregations -%}
+                    <th>{{ aggregation }}</th>
+                {%- endfor %}
+            </tr>
+
+            <!-- The table data will contain a maximum of 5 items -->
+            {% for datetime in summarize.timeline -%}
+                {% set outer_loop = loop %}
+                <tr>
+                    {% if outer_loop.index0 < 5 %}
+                        <td>{{ datetime }}</td>
+                        {% for aggregation in summarize.aggregations -%}
+                            <td>{{ summarize.values(attr_name).values(aggregation)[outer_loop.index0] }}</td>
+                        {%- endfor %}
+
+                    {% elif outer_loop.index0 == 5 %}
+                        <td>...</td>
+                        {% for aggregation in summarize.aggregations -%}
+                            <td>...</td>
+                        {%- endfor %}
+
+                    {% endif %}
+                </tr>
+            {%- endfor %}
+            </tr>
+        </table>
+    </div>
+    <br/>
+    {%- endfor %}
 </div>

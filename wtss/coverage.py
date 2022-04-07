@@ -28,12 +28,7 @@ class Coverage(dict):
     """
 
     def __init__(self, service, metadata=None):
-        """Create a coverage object associated to a WTSS client.
-
-        Args:
-            service (wtss.wtss.WTSS): The client to be used by the coverage object.
-            metadata (dict): The coverage metadata.
-        """
+        """Create a coverage object associated to a WTSS client."""
         #: WTSS: The associated WTSS client to be used by the coverage object.
         self._service = service
 
@@ -77,12 +72,6 @@ class Coverage(dict):
         return self['extent']['spatial']['bbox'][0]
 
 
-    # @property
-    # def spatial_resolution(self):
-    #     """Return the coverage spatial resolution metadata."""
-    #     return self['extent']
-
-
     @property
     def timeline(self):
         """Return the coverage timeline."""
@@ -91,7 +80,7 @@ class Coverage(dict):
 
     @staticmethod
     def _check_input_parameters(self, options):
-
+        """Check the input parameters formats."""
         # -------------------------------------------------------------------------
         # Check geometry
 
@@ -159,28 +148,32 @@ class Coverage(dict):
 
 
     def ts(self, **options):
-        """Retrieve the time series for a given location and time interval."""
+        """Retrieve the time series."""
         # Check the parameters
         options_checked = self._check_input_parameters(self, options)
         
         # Invoke timeseries request
-        data = self._service._retrieve_timeseries_or_summarize( coverage_name = self.name, 
-                                                                route = 'timeseries', 
-                                                                options = options_checked)
+        data = self._service._retrieve_timeseries_or_summarize(
+            coverage_name = self.name, 
+            route = 'timeseries', 
+            options = options_checked
+        )
 
         # Create timeseries object
         return TimeSeries(self, data)
 
 
     def summarize(self, **options):
-        """Retrieve the summarized time series for a given location and time interval."""
+        """Retrieve the summarized time series."""
         # Check the parameters
         options_checked = self._check_input_parameters(self, options)
 
         # Invoke timeseries request
-        data = self._service._retrieve_timeseries_or_summarize( coverage_name = self.name, 
-                                                                route = 'summarize', 
-                                                                options = options_checked)
+        data = self._service._retrieve_timeseries_or_summarize(
+            coverage_name = self.name, 
+            route = 'summarize', 
+            options = options_checked
+        )
 
         # Create Summarize object
         return Summarize(self, data)
@@ -190,6 +183,7 @@ class Coverage(dict):
         """Return the string representation of the Coverage object."""
         return super().__str__()
 
+
     def __repr__(self):
         """Return the Coverage object representation."""
         wtss_repr = repr(self._service)
@@ -198,9 +192,11 @@ class Coverage(dict):
 
         return text
 
+
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints WTSS."""
         return self._repr_html_()
+
 
     def _repr_html_(self):
         """Display the coverage metadata as HTML.

@@ -23,6 +23,7 @@ class SummarizeAttributeResult:
         for aggr_name, aggr_result in aggr_results:
             setattr(self, aggr_name, aggr_result)
     
+    
     def values(self, attr_name):
         """Return the value of a given property of object."""
         return getattr(self, attr_name)
@@ -45,14 +46,12 @@ class Summarize(dict):
         #: Coverage: The associated coverage.
         self._coverage = coverage
 
+        setattr(self, 'query', data['query'])
+        
         super(Summarize, self).__init__(data or {})
 
-        # Verify if query returned timeseries
-        success_query = True if len(self['results']['values']) > 0 else False
-        setattr(self, 'success_query', success_query)
-
         # Add coverage attributes as object property
-        if success_query:
+        if self.success_query:
             attributes = [attr_result for attr_result in self['results']['values'].items()]
             # For each attribute, create a property
             for attr_name, aggr_results in attributes:
@@ -66,14 +65,20 @@ class Summarize(dict):
 
 
     @property
+    def success_query(self):
+        """Verify if the query returned."""
+        return True if len(self['results']['values']) > 0 else False
+
+
+    @property
     def attributes(self):
-        """Return a list with attribute names."""
+        """Return a list with attribute names selected by user."""
         return [attr for attr in self['results']['values'].keys()] if self.success_query else None
 
 
     @property
     def aggregations(self):
-        """Return a list with attribute names."""
+        """Return a list with aggregations names selected by user."""
         return self['query']['aggregations'] if 'aggregations' in self['query'].keys() else ['min','max','mean','median','std']
 
     
@@ -92,7 +97,7 @@ class Summarize(dict):
         """Create a pandas dataframe with summarized data.
 
         Raises:
-            ImportError: If Pandas or Maptplotlib could not be imported.
+            ImportError: If pandas or maptplotlib could not be imported.
         """
         try:
             import matplotlib.pyplot as plt
@@ -124,7 +129,7 @@ class Summarize(dict):
 
     
     def plot(self, **options):
-        """Plot the time series on a chart.
+        """Plot the summarized time series on a chart.
 
         Keyword Args:
             attributes (list): A list like ['EVI','NDVI']

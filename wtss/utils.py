@@ -23,18 +23,3 @@ def render_html(template_name, **kwargs):
     """Render Jinja2 HTML template."""
     template = _template_env.get_template(template_name)
     return template.render(**kwargs)
-
-
-def to_datetime(timeline, fmt='%Y-%m-%d'):
-    """Convert a timeline from a string list to a Python datetime list.
-
-    Args:
-        timeline (list): a list of strings representing dates.
-        fmt (str): the format date (e.g. `"%Y-%m-%d`").
-
-    Returns:
-        list (datetime): a timeline with datetime values.
-    """
-    date_timeline = [datetime.strptime(t, fmt).date() for t in timeline]
-
-    return date_timeline

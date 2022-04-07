@@ -29,14 +29,12 @@ class TimeSeries(dict):
         #: Coverage: The associated coverage.
         self._coverage = coverage
 
+        setattr(self, 'query', data['query'])
+
         super(TimeSeries, self).__init__(data or {})
 
-        # Verify if query returned timeseries
-        success_query = True if len(self['results']) > 0 else False
-        setattr(self, 'success_query', success_query)
-
         # Add all timeseries from an attribute as object property
-        if success_query:
+        if self.success_query:
             # Get attribute names and first timeseries
             values = dict()
             attributes = [attrs for attrs in self['results'][0]['time_series']['values'].items()]
@@ -53,10 +51,17 @@ class TimeSeries(dict):
 
 
     @property
+    def success_query(self):
+        """Verify if the query returned."""
+        return True if len(self['results']) > 0 else False
+
+
+    @property
     def number_of_pixels(self):
         """Return the number of pixels computed in timeseries."""
         return len(self['results'])
 
+    
     @property
     def timeline(self):
         """Return the timeline associated to the time series."""
@@ -64,14 +69,8 @@ class TimeSeries(dict):
 
 
     @property
-    def success_request(self):
-        """Return a list with attribute names."""
-        return True if self.success_query else False
-        
-
-    @property
     def attributes(self):
-        """Return a list with attribute names."""
+        """Return a list with attribute names selected by user."""
         return [attr for attr in self['results'][0]['time_series']['values']] if self.success_query else None
 
 
@@ -84,7 +83,7 @@ class TimeSeries(dict):
         """Create a pandas dataframe with timeseries data.
 
         Raises:
-            ImportError: If Pandas or Maptplotlib could not be imported.
+            ImportError: If pandas or maptplotlib could not be imported.
         """
         try:
             import matplotlib.pyplot as plt
@@ -94,18 +93,21 @@ class TimeSeries(dict):
 
         # Build the dataframe in a tibble format
         attrs = []
-        aggrs = []
         datetimes = []
+        pixels_ids = []
         values = []
         for attr_name in self.attributes:
-            for pixel_timeserie in self.values(attr_name):
+            for pixel_id in range(0, len(self.values(attr_name))):
+                pixel_timeserie = self.values(attr_name)[pixel_id]
                 for i in range(0, len(self.timeline)):
-                    datetimes.append(self.timeline[i])
                     attrs.append(attr_name)
+                    pixels_ids.append(pixel_id)
+                    datetimes.append(self.timeline[i])
                     values.append(pixel_timeserie[i])
 
         df = pd.DataFrame({
             'attribute': attrs,
+            'pixel_id': pixels_ids,
             'datetime': pd.to_datetime(datetimes, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
             'value': values,
         })
@@ -117,14 +119,10 @@ class TimeSeries(dict):
         """Plot the time series on a chart.
 
         Keyword Args:
-            attribute (string): An attribute, like 'EVI' or 'EVI'.
+            attribute (str): A string like 'EVI' or 'NDVI'
 
         Raises:
-            ImportError: If Maptplotlib or Numpy or Datetime could not be imported.
-
-        .. note::
-            You should have Matplotlib and Numpy installed.
-            See :ref:`wtss.py install notes <Installation>` for more information.
+            ImportError: If datetime, maptplotlib or numpy or datetime could not be imported.
         """
         try:
             import datetime as dt

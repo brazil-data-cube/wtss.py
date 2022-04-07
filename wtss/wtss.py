@@ -99,13 +99,16 @@ class WTSS:
         """Retrieve the time series for a given location.
 
         Keyword Args:
-            attributes (optional): A string with attribute names separated by commas,
-                or any sequence of strings. If omitted, the values for all
-                coverage attributes are retrieved.
-            longitude (int/float): A longitude value according to EPSG:4326.
-            latitude (int/float): A latitude value according to EPSG:4326.
-            start_datetime (:obj:`str`, optional): The begin of a time interval.
-            end_datetime (:obj:`str`, optional): The begin of a time interval.
+            coverage_name        (*required): Name of the coverage
+            route                (*required): The desired operation ('timeseries' or 'summarize')
+            attributes           (optional): A list containing the attributes names.
+            geom                 (optional): The geometry to query
+            latitude             (optional): A double that will be used with longitude if geom is not defined
+            longitude            (optional): A double that will be used with latitude if geom is not defined
+            start_datetime       (optional): A string representing the start datetime to query
+            end_datetime         (optional): A string representing the end datetime to query
+            applyAttributeScale: (optional): Boolean representing if results apply data scale for each attribute
+            pixelCollisionType:  (optional): string that represents collision types (e.g. user wants only pixels inside ROI)
 
         Returns:
             dict: A time series object as a dictionary.

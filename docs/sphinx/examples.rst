@@ -12,49 +12,73 @@ Examples
 ========
 
 
-Traversing a Service
---------------------
-
-
-This example shows how to traverse the list of coverages in a service:
-
-
-.. literalinclude:: ../../examples/it-coverages.py
-   :language: python
-   :lines: 11-
-
-
 List Available Coverages
-------------------------
+-------------------------------
 
 
-This example shows the list of coverages in a service:
+This example shows the available coverages in WTSS.
 
 
-.. literalinclude:: ../../examples/list-coverages.py
+.. literalinclude:: ../../examples/list_coverages.py
    :language: python
    :lines: 11-
 
 
-Time Series
------------
+Summarize Time Series
+-------------------------------
 
 
-This example shows how to retrieve and plot a time series:
+This example shows how to retrieve a summarized time series.
 
 
-.. literalinclude:: ../../examples/timeseries.py
+.. literalinclude:: ../../examples/sm.py
    :language: python
    :lines: 11-
 
 
-Text Representations
---------------------
+Date Formats
+-------------------------------
 
 
-This example shows how the various text representation for services and coverages:
+This example shows how different formats can be used to datetime.
 
 
-.. literalinclude:: ../../examples/text-repr.py
+.. literalinclude:: ../../examples/ts_and_sm_date_format.py
+   :language: python
+   :lines: 11-
+
+
+Lat Long Example
+-------------------------------
+
+
+This example shows how to query data with lat long.
+
+
+.. literalinclude:: ../../examples/ts_and_sm_geom_latlong.py
+   :language: python
+   :lines: 11-
+
+
+Shapely Object Geometry
+-------------------------------
+
+
+This example shows how to use a shapely geometry for the request.
+
+
+.. literalinclude:: ../../examples/ts_and_sm_geom_shapely.py
+   :language: python
+   :lines: 11-
+
+
+Jupyter Notebook Example
+-------------------------------
+
+
+This is a WTSS Client in a jupyter notebook.
+
+
+.. literalinclude:: ../../examples/WTSS_jupyter_notebook.ipynb
    :language: python
    :lines: 11-

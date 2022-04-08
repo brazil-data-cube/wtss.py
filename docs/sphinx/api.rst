@@ -20,4 +20,3 @@ WTSS API
     class_wtss
     class_coverage
     class_timeseries
-    utils

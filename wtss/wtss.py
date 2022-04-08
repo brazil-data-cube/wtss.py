@@ -108,7 +108,6 @@ class WTSS:
             start_datetime       (optional): A string representing the start datetime to query
             end_datetime         (optional): A string representing the end datetime to query
             applyAttributeScale: (optional): Boolean representing if results apply data scale for each attribute
-            pixelCollisionType:  (optional): string that represents collision types (e.g. user wants only pixels inside ROI)
 
         Returns:
             dict: A time series object as a dictionary.
@@ -230,7 +229,6 @@ class WTSS:
 
         This integrates a rich display in IPython.
         """
-        # html = render_html('wtss.html', url=self._url, coverages=self.coverages)
         html = render_html('wtss.html', service=self)
 
         return html

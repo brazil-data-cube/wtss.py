@@ -8,6 +8,8 @@
 
 """A class that represents a Time Series in WTSS."""
 
+import datetime as dt
+
 from .utils import render_html
 
 
@@ -74,6 +76,12 @@ class TimeSeries(dict):
         return [attr for attr in self['results'][0]['time_series']['values']] if self.success_query else None
 
 
+    @property
+    def attributes_objects(self):
+        """Return a list with attributes objects."""
+        return [attr_obj for attr_obj in self._coverage.attributes if attr_obj['name'] in self.attributes]
+
+
     def values(self, attr_name):
         """Return the time series for the given attribute."""
         return getattr(self, attr_name)
@@ -125,8 +133,6 @@ class TimeSeries(dict):
             ImportError: If datetime, maptplotlib or numpy or datetime could not be imported.
         """
         try:
-            import datetime as dt
-
             import matplotlib.pyplot as plt
             import numpy as np
         except:
@@ -146,16 +152,19 @@ class TimeSeries(dict):
         fig, ax = plt.subplots()
 
         # Add timeserie for each pixel
-        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
+        x = [dt.datetime.fromisoformat(d.replace('Z','+00:00')) for d in self.timeline]
         attribute_timeseries = self.values(attribute)
         for pixel_ts in attribute_timeseries:
+            # Remove nodata value with None
+            nodata_value = [attr_obj['nodata'] for attr_obj in self.attributes_objects if attr_obj['name'] == attribute][0]
+            pixel_ts = [value if value != nodata_value else None for value in pixel_ts]
+            # Plot axis
             ax.plot(x, pixel_ts, ls='-', linewidth=1.5)
 
         # Define plot properties and show plot
         plt.title(f'{self._coverage.name}', fontsize=20)
         plt.xlabel('Date', fontsize=16)
         plt.ylabel(attribute, fontsize=16)
-        plt.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
         fig.autofmt_xdate()
         plt.show()
 

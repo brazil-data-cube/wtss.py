@@ -35,6 +35,7 @@ tests_require = [
 examples_require = [
     'matplotlib>=3.1',
     'numpy>=1.18',
+    'pandas>=1.4'
 ]
 
 extras_require = {

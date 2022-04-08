@@ -1,6 +1,6 @@
 ..
     This file is part of Python Client Library for WTSS.
-    Copyright (C) 2020-2021 INPE.
+    Copyright (C) 2022 INPE.
 
     Python Client Library for WTSS is free software; you can redistribute it and/or modify it
     under the terms of the MIT License; see LICENSE file for more details.
@@ -71,7 +71,7 @@ In order to retrieve the time series for attributes ``red`` and ``nir``, in the 
 
     ts = coverage.ts(attributes=('red', 'nir'),
                      latitude=-12.0, longitude=-54.0,
-                     start_date='2001-01-01', end_date='2001-12-31')
+                     start_datetime='2001-01-01', end_datetime='2001-12-31')
 
 
 Then, you can access the time series values through the name of the attributes:

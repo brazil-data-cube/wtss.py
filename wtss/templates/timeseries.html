@@ -1,16 +1,13 @@
 <div>
     <div>
-        <b>Time Series</b> {{ timeseries._coverage.name }}
+        <b>Time Series:</b> {{ timeseries._coverage.name }}
     </div>
+
+
     <br/>
-    <div>
-        {% for attr in timeseries['result']['attributes'] -%}
-        <div>
-            <b>{{ attr['attribute'] }}:</b> {{ attr['values'] }}
-        </div>
-        {%- endfor %}
-    </div>
-    <br/>
+
+
+    <!-- Print the timeline -->
     <div>
         <b>timeline</b>
     </div>
@@ -21,4 +18,43 @@
         {%- endfor %}
         </select>
     </div>
+
+
+    <br/>
+
+
+    <div>
+        <b>Time Series:</b>
+    </div>
+    <!-- Print the table for each attribute -->
+    {% for attr_name in timeseries.attributes -%}
+    <div>
+        <div>
+            <b>{{ attr_name }}</b>
+        </div>
+        <table>
+            <!-- Set the columns names -->
+            <tr>
+                <th>pixel id</th>
+                <th>timeseries</th>
+            </tr>
+            
+            <!-- The table data will contain a maximum of 5 items -->
+            {% for pixel_id in range(timeseries.number_of_pixels) -%}
+                {% if loop.index0 < 5 %}    
+                    <tr>
+                        <td>{{ pixel_id }}</td>
+                        <td>{{ timeseries.values(attr_name)[loop.index0] }}</td>
+                    </tr>
+                {% elif loop.index0 == 5 %}
+                    <tr>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                {% endif %}
+            {%- endfor %}
+        </table>
+    </div>
+    <br/>
+    {%- endfor %}
 </div>

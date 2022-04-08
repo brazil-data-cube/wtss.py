@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2020-2021 INPE.
+# Copyright (C) 2022 INPE.
 #
 # Python Client Library for WTSS is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -35,6 +35,7 @@ tests_require = [
 examples_require = [
     'matplotlib>=3.1',
     'numpy>=1.18',
+    'pandas>=1.4'
 ]
 
 extras_require = {
@@ -55,6 +56,7 @@ install_requires = [
     'jsonschema>=3.2',
     'requests>=2.20',
     'Jinja2>=2.10',
+    'pystac-client==0.3.2',
 ]
 
 packages = find_packages()

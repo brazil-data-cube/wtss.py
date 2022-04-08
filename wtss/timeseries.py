@@ -1,12 +1,14 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2020-2021 INPE.
+# Copyright (C) 2022 INPE.
 #
 # Python Client Library for WTSS is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
 #
 
 """A class that represents a Time Series in WTSS."""
+
+import datetime as dt
 
 from .utils import render_html
 
@@ -29,27 +31,55 @@ class TimeSeries(dict):
         #: Coverage: The associated coverage.
         self._coverage = coverage
 
+        setattr(self, 'query', data['query'])
+
         super(TimeSeries, self).__init__(data or {})
 
-        # add coverage attributes as object keys
-        attrs = self['result']['attributes']
-
-        for attr in attrs:
-            setattr(self, attr['attribute'], attr['values'])
+        # Add all timeseries from an attribute as object property
+        if self.success_query:
+            # Get attribute names and first timeseries
+            values = dict()
+            attributes = [attrs for attrs in self['results'][0]['time_series']['values'].items()]
+            for attr_name, values0 in attributes:
+                values[attr_name] = [values0]
+            # Get remaining timeseries
+            for i in range(1, len(self['results'])):
+                attributes = [attrs for attrs in self['results'][i]['time_series']['values'].items()]
+                for attr_name, timeserie in attributes:
+                    values[attr_name].append(timeserie)
+            # Create self attributes with the results
+            for attr_name, all_timeseries in values.items():
+                setattr(self, attr_name, all_timeseries)
 
 
     @property
-    def timeline(self, as_date=False, fmt=''):
+    def success_query(self):
+        """Verify if the query returned."""
+        return True if len(self['results']) > 0 else False
+
+
+    @property
+    def number_of_pixels(self):
+        """Return the number of pixels computed in timeseries."""
+        return len(self['results'])
+
+    
+    @property
+    def timeline(self):
         """Return the timeline associated to the time series."""
-        return self['result']['timeline']
+        return self['results'][0]['time_series']['timeline'] if self.success_query else None
 
 
     @property
     def attributes(self):
-        """Return a list with attribute names."""
-        attributes = [attr['attribute'] for attr in self['result']['attributes']]
+        """Return a list with attribute names selected by user."""
+        return [attr for attr in self['results'][0]['time_series']['values']] if self.success_query else None
 
-        return attributes
+
+    @property
+    def attributes_objects(self):
+        """Return a list with attributes objects."""
+        return [attr_obj for attr_obj in self._coverage.attributes if attr_obj['name'] in self.attributes]
 
 
     def values(self, attr_name):
@@ -57,81 +87,85 @@ class TimeSeries(dict):
         return getattr(self, attr_name)
 
 
+    def pandas_dataframe(self):
+        """Create a pandas dataframe with timeseries data.
+
+        Raises:
+            ImportError: If pandas or maptplotlib could not be imported.
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import pandas as pd
+        except:
+            raise ImportError('Cannot import one of the following libraries: [pandas, matplotlib].')
+
+        # Build the dataframe in a tibble format
+        attrs = []
+        datetimes = []
+        pixels_ids = []
+        values = []
+        for attr_name in self.attributes:
+            for pixel_id in range(0, len(self.values(attr_name))):
+                pixel_timeserie = self.values(attr_name)[pixel_id]
+                for i in range(0, len(self.timeline)):
+                    attrs.append(attr_name)
+                    pixels_ids.append(pixel_id)
+                    datetimes.append(self.timeline[i])
+                    values.append(pixel_timeserie[i])
+
+        df = pd.DataFrame({
+            'attribute': attrs,
+            'pixel_id': pixels_ids,
+            'datetime': pd.to_datetime(datetimes, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
+            'value': values,
+        })
+        
+        return df
+
+
     def plot(self, **options):
         """Plot the time series on a chart.
 
         Keyword Args:
-            attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
-            line_styles (sequence): Not implemented yet.
-            markers (sequence): Not implemented yet.
-            line_width (numeric): Not implemented yet.
-            line_widths (sequence): Not implemented yet,
-            labels (sequence): Not implemented yet.
+            attribute (str): A string like 'EVI' or 'NDVI'
 
         Raises:
-            ImportError: If Maptplotlib or Numpy can no be imported.
-
-        Example:
-
-            Plot the time series of MODIS13Q1 data product:
-
-            .. doctest::
-                :skipif: True
-
-                >>> from wtss import *
-                >>> service = WTSS(WTSS_EXAMPLE_URL)
-                >>> coverage = service['MOD13Q1']
-                >>> ts = coverage.ts(attributes=('red', 'nir'),
-                ...                  latitude=-12.0, longitude=-54.0,
-                ...                  start_date='2001-01-01', end_date='2001-12-31')
-                ...
-                >>> ts.plot()
-
-            This will produce the following time series plot:
-
-            .. image:: ./img/ts_plot.png
-                :alt: Time Series
-                :width: 640px
-
-        .. note::
-
-            You should have Matplotlib and Numpy installed.
-            See :ref:`wtss.py install notes <Installation>` for more information.
+            ImportError: If datetime, maptplotlib or numpy or datetime could not be imported.
         """
         try:
             import matplotlib.pyplot as plt
             import numpy as np
         except:
-            raise ImportError('You should install Matplotlib and Numpy!')
+            raise ImportError('Could not import some of the packages [datetime, matplotlib, numpy].')
 
+        # Check options (only valid is 'attributes')
+        for option in options:
+            if option!='attribute':
+                raise Exception('Only available options is "attribute"')
+
+        # Get attribute value if user defined, otherwise use the first
+        attribute = options['attribute'] if 'attribute' in options else self.attributes[0]
+        if not isinstance(attribute, str):
+            raise Exception('attributes must be a string', attribute)
+
+        # Create plot
         fig, ax = plt.subplots()
 
-        plt.title(f'Coverage {self._coverage["name"]}', fontsize=24)
+        # Add timeserie for each pixel
+        x = [dt.datetime.fromisoformat(d.replace('Z','+00:00')) for d in self.timeline]
+        attribute_timeseries = self.values(attribute)
+        for pixel_ts in attribute_timeseries:
+            # Remove nodata value with None
+            nodata_value = [attr_obj['nodata'] for attr_obj in self.attributes_objects if attr_obj['name'] == attribute][0]
+            pixel_ts = [value if value != nodata_value else None for value in pixel_ts]
+            # Plot axis
+            ax.plot(x, pixel_ts, ls='-', linewidth=1.5)
 
+        # Define plot properties and show plot
+        plt.title(f'{self._coverage.name}', fontsize=20)
         plt.xlabel('Date', fontsize=16)
-        plt.ylabel('Surface Reflectance', fontsize=16)
-
-        x = self.timeline
-
-        plt.xticks(np.linspace(0, len(x), num=10))
-
-        attrs = options['attributes'] if 'attributes' in options else self.attributes
-
-        for attr in attrs:
-            y = self.values(attr)
-
-            ax.plot(x, y,
-                    ls='-',
-                    marker='o',
-                    linewidth=1.0,
-                    label=attr)
-
-        plt.legend()
-
-        plt.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
-
+        plt.ylabel(attribute, fontsize=16)
         fig.autofmt_xdate()
-
         plt.show()
 
 

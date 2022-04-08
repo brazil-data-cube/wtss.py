@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2020-2021 INPE.
+# Copyright (C) 2022 INPE.
 #
 # Python Client Library for WTSS is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -8,6 +8,12 @@
 
 """A class that represents a coverage in WTSS."""
 
+import json
+
+import shapely.geometry
+from dateutil.parser import parse
+
+from .summarize import Summarize
 from .timeseries import TimeSeries
 from .utils import render_html
 
@@ -22,12 +28,7 @@ class Coverage(dict):
     """
 
     def __init__(self, service, metadata=None):
-        """Create a coverage object associated to a WTSS client.
-
-        Args:
-            service (wtss.wtss.WTSS): The client to be used by the coverage object.
-            metadata (dict): The coverage metadata.
-        """
+        """Create a coverage object associated to a WTSS client."""
         #: WTSS: The associated WTSS client to be used by the coverage object.
         self._service = service
 
@@ -37,13 +38,14 @@ class Coverage(dict):
     @property
     def attributes(self):
         """Return the list of coverage attributes."""
-        return self['attributes']
+        # return [band['name'] for band in self['properties']['eo:bands']]
+        return [band for band in self['properties']['eo:bands']]
 
 
     @property
     def crs(self):
         """Return the coordinate reference system metadata."""
-        return self['crs']
+        return self['bdc:crs']
 
 
     @property
@@ -55,101 +57,126 @@ class Coverage(dict):
     @property
     def dimensions(self):
         """Return the coverage dimensions metadata."""
-        return self['dimensions']
+        return self['cube:dimensions']
 
 
     @property
     def name(self):
         """Return the coverage name."""
-        return self['name']
+        return self['id']
 
 
     @property
     def spatial_extent(self):
         """Return the coverage spatial extent."""
-        return self['spatial_extent']
-
-
-    @property
-    def spatial_resolution(self):
-        """Return the coverage spatial resolution metadata."""
-        return self['spatial_resolution']
+        return self['extent']['spatial']['bbox'][0]
 
 
     @property
     def timeline(self):
         """Return the coverage timeline."""
-        return self['timeline']
+        return self['cube:dimensions']['temporal']['values']
+
+
+    @staticmethod
+    def _check_input_parameters(self, options):
+        """Check the input parameters formats."""
+        # -------------------------------------------------------------------------
+        # Check geometry
+
+        geom = options['geom'] if 'geom' in options.keys() else None
+        latitude = options['latitude'] if 'latitude' in options.keys() else None
+        longitude = options['longitude'] if 'longitude' in options.keys() else None
+        
+        # Remove lat and/or lon if geom exists
+        if geom is not None and latitude is not None:
+            options.pop('latitude') 
+        if geom is not None and longitude is not None:
+            options.pop('longitude') 
+
+        # Check if geometry exists and try to create geometry from lat and lon
+        if geom is None:
+            if latitude==None or longitude==None:
+                raise ValueError("Argument geom or arguments latitude and longitude are mandatory.")
+            
+            if (type(latitude) not in (float, int)) or (type(longitude) not in (float, int)):
+                raise ValueError("Arguments latitude and longitude must be numeric.")
+
+            if latitude<-90.0 or latitude>90.0:
+                raise ValueError('latitude is out-of range [-90,90].')
+
+            if longitude<-180.0 or longitude>180.0:
+                raise ValueError('longitude is out-of range [-180,180].')
+
+            options['geom'] = dict(type="Point", coordinates=[longitude, latitude])
+
+        # If geometry is a string, convert to GeoJSON
+        elif isinstance(geom, str):
+            try:
+                options['geom'] = json.loads(geom)
+            except:
+                raise ValueError('Could not convert string geometry to GeoJSON.')
+
+        # If geometry is a shapely object, convert to GeoJSON
+        elif isinstance(geom, shapely.geometry.base.BaseGeometry):
+            options['geom'] = shapely.geometry.mapping(geom)
+        
+        # -------------------------------------------------------------------------
+        # Check start_datetime
+
+        if 'start_datetime' in options.keys():
+            try:
+                dt = parse(options['start_datetime'])
+                options['start_datetime'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            except:
+                raise ValueError('start_datetime could not be parsed.')
+
+
+        # -------------------------------------------------------------------------
+        # Check end_datetime
+
+        if 'end_datetime' in options.keys():
+            try:
+                dt = parse(options['end_datetime'])
+                options['end_datetime'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+            except:
+                raise ValueError('end_datetime could not be parsed.')
+
+        # -------------------------------------------------------------------------
+        # Return options object checked
+        return options
 
 
     def ts(self, **options):
-        """Retrieve the time series for a given location and time interval.
+        """Retrieve the time series."""
+        # Check the parameters
+        options_checked = self._check_input_parameters(self, options)
+        
+        # Invoke timeseries request
+        data = self._service._retrieve_timeseries_or_summarize(
+            coverage_name = self.name, 
+            route = 'timeseries', 
+            options = options_checked
+        )
 
-        Keyword Args:
-            attributes (optional): A string with attribute names separated by commas,
-                or any sequence of strings. If omitted, the values for all
-                coverage attributes are retrieved.
-            longitude (int/float): A longitude value according to EPSG:4326.
-            latitude (int/float): A latitude value according to EPSG:4326.
-            start_date (:obj:`str`, optional): The begin of a time interval.
-            end_date (:obj:`str`, optional): The begin of a time interval.
-
-        Returns:
-            TimeSeries: A time series object as a dictionary.
-
-        Raises:
-            HTTPError: If the server response indicates an error.
-            ValueError: If the response body is not a json document.
-            ImportError: If Maptplotlib or Numpy can no be imported.
-
-        Example:
-
-            Retrieves a time series for MODIS13Q1 data product:
-
-            .. doctest::
-                :skipif: WTSS_EXAMPLE_URL is None
-
-                >>> from wtss import *
-                >>> service = WTSS(WTSS_EXAMPLE_URL)
-                >>> coverage = service['MOD13Q1']
-                >>> ts = coverage.ts(attributes=('red', 'nir'),
-                ...                  latitude=-12.0, longitude=-54.0,
-                ...                  start_date='2001-01-01', end_date='2001-12-31')
-                ...
-                >>> ts.red
-                [236.0, 289.0, ..., 494.0, 1349.0]
-        """
-        attributes = options['attributes'] \
-                        if 'attributes' in options and options['attributes'] \
-                            else [attr['name'] for attr in self.attributes]
-
-        if not isinstance(attributes, str):
-            attributes = ','.join(attributes)
-
-        if ('latitude' not in options) or ('longitude' not in options):
-            raise ValueError("Arguments latitude and longitude are mandatory.")
-
-        latitude = options['latitude']
-        longitude = options['longitude']
-
-        if (type(latitude) not in (float, int)) or (type(longitude) not in (float, int)):
-            raise ValueError("Arguments latitude and longitude must be numeric.")
-
-        if (latitude < -90.0) or (latitude > 90.0):
-            raise ValueError('latitude is out-of range [-90,90]!')
-
-        if (longitude < -180.0) or (longitude > 180.0):
-            raise ValueError('longitude is out-of range [-180,180]!')
-
-        start_date = options['start_date'] if ('start_date' in options) else self.timeline[0]
-
-        end_date = options['end_date'] if ('end_date' in options) else self.timeline[-1]
-
-        data = self._service._time_series(coverage=self.name, attributes=attributes,
-                                          longitude=longitude, latitude=latitude,
-                                          start_date=start_date, end_date=end_date)
-
+        # Create timeseries object
         return TimeSeries(self, data)
+
+
+    def summarize(self, **options):
+        """Retrieve the summarized time series."""
+        # Check the parameters
+        options_checked = self._check_input_parameters(self, options)
+
+        # Invoke timeseries request
+        data = self._service._retrieve_timeseries_or_summarize(
+            coverage_name = self.name, 
+            route = 'summarize', 
+            options = options_checked
+        )
+
+        # Create Summarize object
+        return Summarize(self, data)
 
 
     def __str__(self):
@@ -161,7 +188,7 @@ class Coverage(dict):
         """Return the Coverage object representation."""
         wtss_repr = repr(self._service)
 
-        text = f'Coverage(service={wtss_repr}, metadata={super().__repr__()}'
+        text = f'Coverage(service={wtss_repr}, id={self.name})'
 
         return text
 

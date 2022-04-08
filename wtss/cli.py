@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2020-2021 INPE.
+# Copyright (C) 2022 INPE.
 #
 # Python Client Library for WTSS is free software; you can redistribute it and/or modify it
 # under the terms of the MIT License; see LICENSE file for more details.
@@ -10,7 +10,7 @@
 
 import click
 
-from .wtss import WTSS
+from wtss import WTSS
 
 
 @click.group()
@@ -92,7 +92,7 @@ def describe(verbose, url, coverage, access_token=None):
 @click.option('--access-token', required=False, type=str,
               help='User Personal Access Token.')
 def ts(verbose, url, coverage, attributes,
-       latitude, longitude, start_date, end_date, access_token=None):
+       latitude, longitude, start_datetime, end_datetime):
     """Retrieve the coverage metadata."""
     if verbose:
         click.secho(f'Server: {url}', bold=True, fg='black')
@@ -103,8 +103,11 @@ def ts(verbose, url, coverage, attributes,
 
     cv = service[coverage]
 
-    ts = cv.ts(latitude=latitude, longitude=longitude,
-               attributes=attributes, start_date=start_date, end_date=end_date)
+    ts = cv.ts( latitude=latitude, 
+                longitude=longitude,
+                attributes=attributes, 
+                start_datetime=start_datetime, 
+                end_datetime=end_datetime)
 
     for attr in ts.attributes:
         click.secho(f'\t{attr}: {ts.values(attr)}')

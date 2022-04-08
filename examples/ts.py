@@ -22,11 +22,11 @@ coverage = service['MOD13Q1-6']
 timeseries = coverage.ts(attributes = ['NDVI','EVI'],
                         geom = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]},
                         start_datetime = '2017-01-01',
-                        end_datetime = '2017-02-01T00:00:00Z')
+                        end_datetime = '2017-12-31T00:00:00Z')
 
 print('\nnumber_of_pixels:', timeseries.number_of_pixels)
 print('\nNDVI:', timeseries.NDVI)
 print('\nEVI:', timeseries.EVI)
 print('\ntimeline:', timeseries.timeline)
 
-timeseries.plot(attribute=['NDVI'])
+timeseries.plot(attribute='NDVI')

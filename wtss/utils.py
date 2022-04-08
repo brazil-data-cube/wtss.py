@@ -8,8 +8,6 @@
 
 """Utility functions for WTSS client library."""
 
-from datetime import datetime
-
 import jinja2
 from pkg_resources import resource_filename
 

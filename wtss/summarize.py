@@ -8,6 +8,7 @@
 
 """A class that represents a Time Series in WTSS."""
 
+import datetime as dt
 from logging import raiseExceptions
 
 from pystac import Summaries
@@ -139,8 +140,6 @@ class Summarize(dict):
             ImportError: If Maptplotlib or Numpy or datetime could not be imported.
         """
         try:
-            import datetime as dt
-
             import matplotlib.pyplot as plt
             import numpy as np
         except:
@@ -148,7 +147,7 @@ class Summarize(dict):
 
         # Check options (only valid are 'attributes' and 'aggregation')
         for option in options:
-            if option!='attributes' and option!='aggregation':
+            if option != 'attributes' and option != 'aggregation':
                 raise Exception('Only available options are "attributes" and "aggregation"')
 
         # Get attributes value if user defined, otherwise use all available
@@ -175,7 +174,6 @@ class Summarize(dict):
         plt.xlabel('Date', fontsize=16)
         plt.ylabel('Value', fontsize=16)
         plt.legend()
-        plt.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
         fig.autofmt_xdate()
         plt.show()
 
@@ -190,8 +188,6 @@ class Summarize(dict):
             ImportError: If Maptplotlib or Numpy or datetime could not be imported.
         """
         try:
-            import datetime as dt
-
             import matplotlib.pyplot as plt
             import numpy as np
         except:
@@ -211,7 +207,7 @@ class Summarize(dict):
         fig, ax = plt.subplots()
 
         # Add mean, mean+std and mean-std timeserie
-        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
+        x = [dt.datetime.fromisoformat(d.replace('Z','+00:00')) for d in self.timeline]
         mean = self.values(attribute).values('mean')
         std = self.values(attribute).values('std')
         mean_add_std = [x+y for (x,y) in zip(mean, std)]

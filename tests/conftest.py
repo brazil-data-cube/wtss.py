@@ -13,7 +13,6 @@ from ssl import ALERT_DESCRIPTION_DECOMPRESSION_FAILURE
 
 import pytest
 import requests
-from requests import ConnectionError as _ConnectionError
 
 from wtss import *
 
@@ -21,13 +20,13 @@ WTSS_SERVER_URL = os.getenv("WTSS_SERVER_URL", None)
 BDC_AUTH_CLIENT_SECRET = os.getenv("BDC_AUTH_CLIENT_SECRET", None)
 
 # Set query parameters
-collectionId = 'MOD13Q1-6'
-attributes = ["NDVI","EVI"]
-start_datetime = '2017-01-01T00:00:00Z'
-end_datetime = '2017-02-01T00:00:00Z'
-geom = {"type": "Polygon","coordinates": [[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]}
-applyAttributeScale = False
-aggregations = ['mean','std']
+COLLECTIONID = 'MOD13Q1-6'
+ATTRIBUTES = ["NDVI","EVI"]
+START_DATETIME = '2017-01-01T00:00:00Z'
+END_DATETIME = '2017-02-01T00:00:00Z'
+GEOMETRY = {"type": "Polygon","coordinates": [[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]}
+APPLYATTRIBUTESCALE = False
+AGGREGATIONS = ['mean','std']
 
 
 
@@ -49,6 +48,27 @@ class WTSSrequest:
             url = WTSS_SERVER_URL + collectionId + '/' + route
             return requests.post(url=url, json=parameters, headers=headers)
 
+class ClientRequestGeometry:
+    """Query client with different geometries."""
+
+    def client_request_geometry(geom):
+        """Make a request to client."""
+        try:
+            # WTSS Python Client
+            service = WTSS(url=WTSS_SERVER_URL, access_token=BDC_AUTH_CLIENT_SECRET)
+            coverage = service[COLLECTIONID]
+            summarize = coverage.summarize(
+                attributes = ATTRIBUTES,
+                geom = geom,
+                start_datetime = START_DATETIME,
+                end_datetime = END_DATETIME,
+                applyAttributeScale = APPLYATTRIBUTESCALE,
+                aggregations = AGGREGATIONS
+            )
+            return summarize
+        except requests.exceptions.HTTPError as err:
+            return err
+
 
 
 @pytest.fixture
@@ -56,18 +76,18 @@ def server_request_timeseries():
     """Get server timeseries to use as fixture."""
     response = WTSSrequest.make_request(
         'POST',
-        collectionId = collectionId,
+        collectionId = COLLECTIONID,
         parameters = {
-            'attributes': attributes,
-            'start_datetime': start_datetime,
-            'end_datetime': end_datetime,
-            'geom': geom,
-            'applyAttributeScale': applyAttributeScale
+            'attributes': ATTRIBUTES,
+            'start_datetime': START_DATETIME,
+            'end_datetime': END_DATETIME,
+            'geom': GEOMETRY,
+            'applyAttributeScale': APPLYATTRIBUTESCALE
         },
         headers = {'x-api-key': BDC_AUTH_CLIENT_SECRET},
         route='timeseries'
     )
-    return response#.json()
+    return response
 
 
 @pytest.fixture
@@ -75,19 +95,19 @@ def server_request_summarize():
     """Get server summarize to use as fixture."""
     response = WTSSrequest.make_request(
         'POST',
-        collectionId = collectionId,
+        collectionId = COLLECTIONID,
         parameters = {
-            'attributes': attributes,
-            'start_datetime': start_datetime,
-            'end_datetime': end_datetime,
-            'geom': geom,
-            'applyAttributeScale': applyAttributeScale,
-            'aggregations': aggregations
+            'attributes': ATTRIBUTES,
+            'start_datetime': START_DATETIME,
+            'end_datetime': END_DATETIME,
+            'geom': GEOMETRY,
+            'applyAttributeScale': APPLYATTRIBUTESCALE,
+            'aggregations': AGGREGATIONS
         },
         headers = {'x-api-key': BDC_AUTH_CLIENT_SECRET},
         route='summarize'
     )
-    return response#.json()
+    return response
 
 
 @pytest.fixture
@@ -95,13 +115,13 @@ def client_request_timeseries():
     """Get client timeseries to use as fixture."""
     # WTSS Python Client
     service = WTSS(url=WTSS_SERVER_URL, access_token=BDC_AUTH_CLIENT_SECRET)
-    coverage = service[collectionId]
+    coverage = service[COLLECTIONID]
     timeseries = coverage.ts(
-        attributes = attributes,
-        geom = geom,
-        start_datetime = start_datetime,
-        end_datetime = end_datetime,
-        applyAttributeScale = applyAttributeScale
+        attributes = ATTRIBUTES,
+        geom = GEOMETRY,
+        start_datetime = START_DATETIME,
+        end_datetime = END_DATETIME,
+        applyAttributeScale = APPLYATTRIBUTESCALE
     )
     return timeseries
 
@@ -111,13 +131,13 @@ def client_request_summarize():
     """Get client summarize to use as fixture."""
     # WTSS Python Client
     service = WTSS(url=WTSS_SERVER_URL, access_token=BDC_AUTH_CLIENT_SECRET)
-    coverage = service[collectionId]
+    coverage = service[COLLECTIONID]
     summarize = coverage.summarize(
-        attributes = attributes,
-        geom = geom,
-        start_datetime = start_datetime,
-        end_datetime = end_datetime,
-        applyAttributeScale = applyAttributeScale,
-        aggregations = aggregations
+        attributes = ATTRIBUTES,
+        geom = GEOMETRY,
+        start_datetime = START_DATETIME,
+        end_datetime = END_DATETIME,
+        applyAttributeScale = APPLYATTRIBUTESCALE,
+        aggregations = AGGREGATIONS
     )
     return summarize

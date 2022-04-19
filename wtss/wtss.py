@@ -151,6 +151,10 @@ class WTSS:
                 >>> service['MOD13Q1']
                 Coverage...
         """
+        # UPDATE - Restrict coverage to cubes
+        if key not in self.cubes:
+            raise Exception('For now in this WTSS update, only cubes are available for use.')
+
         collection = self._stac.get_collection(key)
 
         return Coverage(service=self, metadata=collection.to_dict())

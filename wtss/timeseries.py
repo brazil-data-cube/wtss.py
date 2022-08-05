@@ -87,7 +87,7 @@ class TimeSeries(dict):
         return getattr(self, attr_name)
 
 
-    def pandas_dataframe(self):
+    def df(self):
         """Create a pandas dataframe with timeseries data.
 
         Raises:

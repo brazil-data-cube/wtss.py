@@ -56,7 +56,8 @@ install_requires = [
     'jsonschema>=3.2',
     'requests>=2.20',
     'Jinja2>=2.10',
-    'pystac-client==0.3.2',
+    'python-dateutil>=2.8',
+    'Shapely>=1.8'
 ]
 
 packages = find_packages()

@@ -11,13 +11,13 @@
 This module introduces a class named ``wtss`` that can be used to retrieve
 satellite image time series for a given location.
 """
-import json
 import os
+import urllib3
 from distutils.util import strtobool
+from urllib.error import HTTPError
 from urllib.parse import urljoin
 
 import requests
-from pystac_client import Client
 
 from .coverage import Coverage
 from .utils import render_html
@@ -34,10 +34,8 @@ class WTSS:
 
     def __init__(self,
                  url: str,
-                 stac_url: str = 'https://brazildatacube.dpi.inpe.br/stac/',
-                 validate = False, 
-                 access_token: str = None,
-                 headers = None):
+                 validate = False,
+                 access_token: str = None):
         """Create a WTSS client attached to the given host address (an URL).
 
         Args:
@@ -54,30 +52,22 @@ class WTSS:
         #: str: Authentication token to be used with the WTSS server.
         self._access_token = access_token
 
-        parameters = dict(access_token=access_token)
-        self._stac = Client.open(stac_url, headers=headers, parameters=parameters)
+        self._version = None
 
-        # Obtain available cubes, collections, classifications and mosaics
-        coverages = self._stac.get_collections()
-        cubes = []
-        collections = []
-        classifications = []
-        mosaics = []
-        for coverage in coverages:
-            if coverage.extra_fields['bdc:type'] == 'cube':
-                cubes.append(coverage.id)
-            if coverage.extra_fields['bdc:type'] == 'collection':
-                collections.append(coverage.id)
-            if coverage.extra_fields['bdc:type'] == 'classification':
-                classifications.append(coverage.id)
-            if coverage.extra_fields['bdc:type'] == 'mosaic':
-                mosaics.append(coverage.id)
-        
-        setattr(self, 'cubes', cubes)
-        setattr(self, 'collections', collections)
-        setattr(self, 'classifications', classifications)
-        setattr(self, 'mosaics', classifications)
+        self.parameters = dict(access_token=access_token)
 
+        self._links = []
+        self._collections = []
+
+        self._service_info()
+
+    def _service_info(self):
+        try:
+            root = self._request(self._url, method='get', op='/', params=self.parameters)
+            self._version = root['wtss_version']
+            self._links = root['links']
+        except (KeyError, HTTPError) as e:
+            raise RuntimeError('Not a valid Web Time Series Service.') from e
 
     @property
     def coverages(self):
@@ -91,11 +81,15 @@ class WTSS:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
-        collections = self._stac.get_collections()
-        return [collection.id for collection in collections]
+        if len(self._collections) == 0:
+            self._collections = [
+                link['title'].rsplit(' ', 1)[-1]
+                for link in self._links if link['rel'] == 'data'
+            ]
 
+        return self._collections
 
-    def _retrieve_timeseries_or_summarize(self, coverage_name:str, route:str, options:dict):
+    def _retrieve_timeseries_or_summarize(self, coverage_name: str, route: str, **options):
         """Retrieve the time series for a given location.
 
         Keyword Args:
@@ -127,7 +121,6 @@ class WTSS:
 
         return request_result
 
-   
     def __getitem__(self, key):
         """Get coverage whose name is identified by the key.
 
@@ -151,16 +144,15 @@ class WTSS:
                 >>> service['MOD13Q1']
                 Coverage...
         """
-        # UPDATE - Restrict coverage to cubes
-        if key not in self.cubes:
-            raise Exception('For now in this WTSS update, only cubes are available for use.')
+        if key not in self.coverages:
+            raise KeyError(f'Coverage {key} not found.')
 
-        collection = self._stac.get_collection(key)
+        # url = urljoin(self._url, key)
+        coverage = self._request(self._url, op=key, method='get', params=self.parameters)
 
-        return Coverage(service=self, metadata=collection.to_dict())
+        return Coverage(service=self, metadata=coverage)
 
-
-    def __getattr__(self, name):
+    def __getattr__(self, name: str):
         """Get coverage identified by name.
 
         Returns:
@@ -187,7 +179,6 @@ class WTSS:
         except KeyError:
             raise AttributeError(f'No attribute named "{name}"')
 
-
     def __iter__(self):
         """Iterate over coverages available in the service.
 
@@ -197,13 +188,11 @@ class WTSS:
         for cv_name in self.coverages:
             yield self[cv_name]
 
-
     def __str__(self):
         """Return the string representation of the WTSS object."""
         text = f'WTSS:\n\tURL: {self._url}'
 
         return text
-
 
     def __repr__(self):
         """Return the WTSS object representation."""
@@ -212,7 +201,6 @@ class WTSS:
                f'access_token={self._access_token})'
 
         return text
-
 
     def _ipython_key_completions_(self):
         """Integrate key completions for WTSS in IPython.
@@ -227,7 +215,6 @@ class WTSS:
         """
         return self.coverages
 
-
     def _repr_html_(self):
         """Display the WTSS object as HTML.
 
@@ -237,9 +224,8 @@ class WTSS:
 
         return html
 
-
     @staticmethod
-    def _request(url, op, params, method:str='post', headers=None):
+    def _request(url, op, params, method: str = 'post', headers=None):
         """Query the WTSS service using HTTP GET verb and return the result as a JSON document.
 
         Args:
@@ -261,7 +247,8 @@ class WTSS:
         url = '/'.join(s.strip('/') for s in url_components)
         verify = bool(strtobool(os.getenv('REQUEST_SSL_VERIFY', '1')))
 
-        token = headers['x-api-key']
+        if not verify:  # Remove warning for any insecure https requests
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         response = getattr(requests, method)(url, headers=headers, json=params, verify=verify)
 

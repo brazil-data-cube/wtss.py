@@ -9,6 +9,7 @@
 """A class that represents a Time Series in WTSS."""
 
 import datetime as dt
+from dateutil.parser import parse
 
 from .utils import render_html
 
@@ -151,7 +152,7 @@ class Summarize(dict):
         fig, ax = plt.subplots()
 
         # Add timeserie for each attribute
-        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
+        x = [parse(d).date() for d in self.timeline]
         for attr in attributes:
             y = self.values(attr).values(aggregation)
             ax.plot(x, y, ls='-', linewidth=1.5, label=attr)
@@ -181,7 +182,7 @@ class Summarize(dict):
 
         # Check options (only valid is 'attribute')
         for option in options:
-            if option!='attribute':
+            if option != 'attribute':
                 raise Exception('Only available options is "attribute"')
 
         # Get attribute value if user set, or use the first
@@ -193,7 +194,7 @@ class Summarize(dict):
         fig, ax = plt.subplots()
 
         # Add mean, mean+std and mean-std timeserie
-        x = [dt.datetime.fromisoformat(d.replace('Z','+00:00')) for d in self.timeline]
+        x = [parse(d) for d in self.timeline]
         mean = self.values(attribute).values('mean')
         std = self.values(attribute).values('std')
         mean_add_std = [x+y for (x,y) in zip(mean, std)]

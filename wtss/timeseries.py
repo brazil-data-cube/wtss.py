@@ -62,8 +62,8 @@ class TimeSeries(dict):
         return True if len(self['results']) > 0 else False
 
     @property
-    def number_of_pixels(self):
-        """Return the number of pixels computed in timeseries."""
+    def total_locations(self):
+        """Return the computed locations in timeseries."""
         return len(self['results'])
 
     @property

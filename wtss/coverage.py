@@ -9,8 +9,10 @@
 """A class that represents a coverage in WTSS."""
 
 import json
+from typing import List, Union
 
 import shapely.geometry
+import shapely.wkb
 from dateutil.parser import parse
 
 from .summarize import Summarize
@@ -34,78 +36,63 @@ class Coverage(dict):
 
         super(Coverage, self).__init__(metadata or {})
 
-
     @property
     def attributes(self):
         """Return the list of coverage attributes."""
-        # return [band['name'] for band in self['properties']['eo:bands']]
-        return [band for band in self['properties']['eo:bands']]
-
+        return [band for band in self['bands']]
 
     @property
     def crs(self):
         """Return the coordinate reference system metadata."""
         return self['bdc:crs']
 
-
     @property
     def description(self):
         """Return the coverage description."""
         return self['description']
 
-
     @property
     def dimensions(self):
         """Return the coverage dimensions metadata."""
-        return self['cube:dimensions']
-
+        return self['raster_size']
 
     @property
     def name(self):
         """Return the coverage name."""
-        return self['id']
-
+        return self['fullname']
 
     @property
     def spatial_extent(self):
         """Return the coverage spatial extent."""
-        return self['extent']['spatial']['bbox'][0]
-
+        return shapely.wkb.loads(self['extent'], hex=True)
 
     @property
     def timeline(self):
         """Return the coverage timeline."""
-        return self['cube:dimensions']['temporal']['values']
-
+        return sorted(self['timeline'])
 
     @staticmethod
-    def _check_input_parameters(self, options):
+    def _check_input_parameters(self, **options):
         """Check the input parameters formats."""
-        # -------------------------------------------------------------------------
-        # Check geometry
+        geom = options.get('geom')
+        latitude = options.pop('latitude', None)
+        longitude = options.pop('longitude', None)
 
-        geom = options['geom'] if 'geom' in options.keys() else None
-        latitude = options['latitude'] if 'latitude' in options.keys() else None
-        longitude = options['longitude'] if 'longitude' in options.keys() else None
-        
-        # Remove lat and/or lon if geom exists
-        if geom is not None and latitude is not None:
-            options.pop('latitude') 
-        if geom is not None and longitude is not None:
-            options.pop('longitude') 
+        if geom is None and (latitude is None or longitude is None):
+            raise RuntimeError('Missing parameter geom or latitude/longitude.')
 
         # Check if geometry exists and try to create geometry from lat and lon
         if geom is None:
-            if latitude==None or longitude==None:
+            if latitude is None or longitude is None:
                 raise ValueError("Argument geom or arguments latitude and longitude are mandatory.")
-            
+
             if (type(latitude) not in (float, int)) or (type(longitude) not in (float, int)):
                 raise ValueError("Arguments latitude and longitude must be numeric.")
 
-            if latitude<-90.0 or latitude>90.0:
+            if latitude < -90.0 or latitude > 90.0:
                 raise ValueError('latitude is out-of range [-90,90].')
 
-            if longitude<-180.0 or longitude>180.0:
+            if longitude < -180.0 or longitude > 180.0:
                 raise ValueError('longitude is out-of range [-180,180].')
 
             options['geom'] = dict(type="Point", coordinates=[longitude, latitude])
@@ -114,75 +101,77 @@ class Coverage(dict):
         elif isinstance(geom, str):
             try:
                 options['geom'] = json.loads(geom)
-            except:
+            except json.JSONDecodeError:
                 raise ValueError('Could not convert string geometry to GeoJSON.')
 
         # If geometry is a shapely object, convert to GeoJSON
         elif isinstance(geom, shapely.geometry.base.BaseGeometry):
             options['geom'] = shapely.geometry.mapping(geom)
-        
-        # -------------------------------------------------------------------------
-        # Check start_datetime
 
-        if 'start_datetime' in options.keys():
+        def _validate_datetime(key: str, fmt: str = "%Y-%m-%dT%H:%M:%SZ"):
+            if options.get(key) is None:
+                return
             try:
-                dt = parse(options['start_datetime'])
-                options['start_datetime'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+                dt = parse(options[key])
+                options[key] = dt.strftime(fmt)
             except:
-                raise ValueError('start_datetime could not be parsed.')
+                raise ValueError(f'{key} could not be parsed.')
 
+        _validate_datetime('start_datetime')
+        _validate_datetime('end_datetime')
 
-        # -------------------------------------------------------------------------
-        # Check end_datetime
-
-        if 'end_datetime' in options.keys():
-            try:
-                dt = parse(options['end_datetime'])
-                options['end_datetime'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-            except:
-                raise ValueError('end_datetime could not be parsed.')
-
-        # -------------------------------------------------------------------------
-        # Return options object checked
         return options
-
 
     def ts(self, **options):
         """Retrieve the time series."""
         # Check the parameters
-        options_checked = self._check_input_parameters(self, options)
-        
+        options_checked = self._check_input_parameters(self, **options)
+
         # Invoke timeseries request
         data = self._service._retrieve_timeseries_or_summarize(
-            coverage_name = self.name, 
-            route = 'timeseries', 
-            options = options_checked
+            coverage_name=self.name,
+            route='timeseries',
+            **options_checked
         )
 
-        # Create timeseries object
         return TimeSeries(self, data)
 
+    def summarize(self, attributes: List[str],
+                  geom: Union[str, shapely.geometry.base.BaseGeometry], **options):
+        """Retrieve the Time Series summarize object.
 
-    def summarize(self, **options):
-        """Retrieve the summarized time series."""
+        You may ask for a statistics method using the `operators` parameters.
+        The following operators are supported: `mean`, `median`, `min`, `max`, `std`.
+        By default, the WTSS server retrieves all aggregations when no operators given.
+
+        Args:
+            attributes (List[str]): A list of attributes to be applied in request.
+            geom (dict|shapely.geometry.base.BaseGeometry): A GEOM object to filter.
+        Keyword Args:
+            start_datetime (str): The start datetime offset. Default None.
+            end_datetime (str): The end datetime offset
+            operations (List[str]): A list of specific operators to retrieve. Default None (All).
+            masked (bool): Use cloud masking for summarization. Default is None.
+            mask (Any): Optional cloud masking support. For BDC Cubes, the WTSS already deals with
+                internal masking.
+                See more in `Temporal Composition Masking <https://brazil-data-cube.github.io/products/specifications/processing-flow.html#temporal-compositing>`_.
+        """
         # Check the parameters
-        options_checked = self._check_input_parameters(self, options)
+        options_checked = self._check_input_parameters(self, attributes=attributes, geom=geom, **options)
 
         # Invoke timeseries request
         data = self._service._retrieve_timeseries_or_summarize(
-            coverage_name = self.name, 
-            route = 'summarize', 
-            options = options_checked
+            coverage_name=self.name,
+            route='summarize',
+            **options_checked
         )
 
         # Create Summarize object
         return Summarize(self, data)
 
-
     def __str__(self):
         """Return the string representation of the Coverage object."""
         return super().__str__()
-
 
     def __repr__(self):
         """Return the Coverage object representation."""
@@ -192,11 +181,9 @@ class Coverage(dict):
 
         return text
 
-
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints WTSS."""
         return self._repr_html_()
-
 
     def _repr_html_(self):
         """Display the coverage metadata as HTML.

@@ -59,9 +59,9 @@ def list_coverages(verbose, url, access_token=None):
 def describe(verbose, url, coverage, access_token=None):
     """Retrieve the coverage metadata."""
     if verbose:
-        click.secho(f'Server: {url}', bold=True, fg='black')
+        click.secho(f'Server: {url}', bold=True, fg='yellow')
         click.secho('\tRetrieving the coverage metadata... ',
-                    bold=False, fg='black')
+                    bold=False, fg='yellow')
 
     service = WTSS(url, access_token=access_token)
 
@@ -70,7 +70,7 @@ def describe(verbose, url, coverage, access_token=None):
     click.secho(f'\t- {cv}', bold=True, fg='green')
 
     if verbose:
-        click.secho('\tFinished!', bold=False, fg='black')
+        click.secho('\tFinished!', bold=False, fg='yellow')
 
 
 @cli.command()
@@ -92,22 +92,23 @@ def describe(verbose, url, coverage, access_token=None):
 @click.option('--access-token', required=False, type=str,
               help='User Personal Access Token.')
 def ts(verbose, url, coverage, attributes,
-       latitude, longitude, start_datetime, end_datetime):
+       latitude, longitude, start_datetime, end_datetime,
+       access_token):
     """Retrieve the coverage metadata."""
     if verbose:
-        click.secho(f'Server: {url}', bold=True, fg='black')
+        click.secho(f'Server: {url}', bold=True, fg='yellow')
         click.secho('\tRetrieving time series... ',
-                    bold=False, fg='black')
+                    bold=False, fg='yellow')
 
     service = WTSS(url, access_token=access_token)
 
     cv = service[coverage]
 
-    ts = cv.ts( latitude=latitude, 
-                longitude=longitude,
-                attributes=attributes, 
-                start_datetime=start_datetime, 
-                end_datetime=end_datetime)
+    ts = cv.ts(latitude=latitude,
+               longitude=longitude,
+               attributes=attributes,
+               start_datetime=start_datetime,
+               end_datetime=end_datetime)
 
     for attr in ts.attributes:
         click.secho(f'\t{attr}: {ts.values(attr)}')
@@ -115,4 +116,4 @@ def ts(verbose, url, coverage, attributes,
     click.secho(f'\ttimeline: {ts.timeline}')
 
     if verbose:
-        click.secho('\tFinished!', bold=False, fg='black')
+        click.secho('\tFinished!', bold=False, fg='yellow')

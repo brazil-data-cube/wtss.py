@@ -9,7 +9,12 @@
 """A class that represents a Time Series in WTSS."""
 
 import datetime as dt
+from typing import Any, Iterator, List, Optional
 
+import numpy
+import shapely.geometry
+
+from .summarize import Summarize
 from .utils import render_html
 
 
@@ -22,7 +27,7 @@ class TimeSeries(dict):
         `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
     """
 
-    def __init__(self, coverage, data):
+    def __init__(self, coverage: 'Coverage', data):
         """Create a TimeSeries object associated to a coverage.
 
         Args:
@@ -51,47 +56,48 @@ class TimeSeries(dict):
             for attr_name, all_timeseries in values.items():
                 setattr(self, attr_name, all_timeseries)
 
-
     @property
     def success_query(self):
         """Verify if the query returned."""
         return True if len(self['results']) > 0 else False
-
 
     @property
     def number_of_pixels(self):
         """Return the number of pixels computed in timeseries."""
         return len(self['results'])
 
-    
     @property
     def timeline(self):
         """Return the timeline associated to the time series."""
         return self['results'][0]['time_series']['timeline'] if self.success_query else None
-
 
     @property
     def attributes(self):
         """Return a list with attribute names selected by user."""
         return [attr for attr in self['results'][0]['time_series']['values']] if self.success_query else None
 
-
     @property
     def attributes_objects(self):
         """Return a list with attributes objects."""
         return [attr_obj for attr_obj in self._coverage.attributes if attr_obj['name'] in self.attributes]
 
-
     def values(self, attr_name):
         """Return the time series for the given attribute."""
         return getattr(self, attr_name)
 
+    @property
+    def locations(self) -> Iterator[shapely.geometry.Point]:
+        """Iterator that yields location objects.
+
+        Each location is a shapely.geometry.Point representing the pixel center.
+        """
+        return map(lambda location: shapely.geometry.shape(location['pixel_center']), self['results'])
 
     def df(self):
         """Create a pandas dataframe with timeseries data.
 
         Raises:
-            ImportError: If pandas or maptplotlib could not be imported.
+            ImportError: If pandas or matplotlib could not be imported.
         """
         try:
             import matplotlib.pyplot as plt
@@ -122,57 +128,91 @@ class TimeSeries(dict):
         
         return df
 
+    def summarize(self,
+                  operations: Optional[List[str]] = None,
+                  masked: Optional[bool] = False,
+                  mask: Any = None) -> Summarize:
+        """Summarize the current Time Series object."""
+        return self._coverage.summarize(operations=operations,
+                                        masked=masked,
+                                        mask=mask,
+                                        geom=self['query']['geom'],
+                                        start_datetime=self['query']['start_datetime'],
+                                        end_datetime=self['query']['end_datetime'],
+                                        attributes=self['query']['attributes'])
 
-    def plot(self, **options):
+    def plot(self, stats: bool = True, limit: int = 1000, **options):
         """Plot the time series on a chart.
 
-        Keyword Args:
-            attribute (str): A string like 'EVI' or 'NDVI'
+        Args:
+            stats (bool): Flag to display time series statistics. Default is True.
+                (Only applied on Time Series per Area)
+            limit (int): Limit the number of time series to plot. Default is 1000.
+                When None, display all. You may have performance issues.
 
+        Keyword Args:
+            attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
+            line_styles (sequence): Not implemented yet.
+            markers (sequence): Not implemented yet.
+            line_width (numeric): Not implemented yet.
+            line_widths (sequence): Not implemented yet,
+            labels (sequence): Not implemented yet.
         Raises:
-            ImportError: If datetime, maptplotlib or numpy or datetime could not be imported.
+            ImportError: If datetime, matplotlib or numpy or datetime could not be imported.
         """
         try:
             import matplotlib.pyplot as plt
-            import numpy as np
-        except:
-            raise ImportError('Could not import some of the packages [datetime, matplotlib, numpy].')
+        except ImportError:
+            raise ImportError('You should install Matplotlib and Numpy!')
 
-        # Check options (only valid is 'attributes')
-        for option in options:
-            if option!='attribute':
-                raise Exception('Only available options is "attribute"')
+        summarize = self.summarize()
 
         # Get attribute value if user defined, otherwise use the first
-        attribute = options['attribute'] if 'attribute' in options else self.attributes[0]
-        if not isinstance(attribute, str):
-            raise Exception('attributes must be a string', attribute)
+        attributes = options.get('attributes') or self.attributes
 
         # Create plot
-        fig, ax = plt.subplots()
+        fig, axes = plt.subplots(len(attributes), 1)
 
-        # Add timeserie for each pixel
-        x = [dt.datetime.fromisoformat(d.replace('Z','+00:00')) for d in self.timeline]
-        attribute_timeseries = self.values(attribute)
-        for pixel_ts in attribute_timeseries:
-            # Remove nodata value with None
-            nodata_value = [attr_obj['nodata'] for attr_obj in self.attributes_objects if attr_obj['name'] == attribute][0]
-            pixel_ts = [value if value != nodata_value else None for value in pixel_ts]
-            # Plot axis
-            ax.plot(x, pixel_ts, ls='-', linewidth=1.5)
+        if len(attributes) == 1:  # For single attribute, transform into sequence to continue workflow
+            axes = [axes]
 
-        # Define plot properties and show plot
-        plt.title(f'{self._coverage.name}', fontsize=20)
-        plt.xlabel('Date', fontsize=16)
-        plt.ylabel(attribute, fontsize=16)
+        x = [dt.datetime.fromisoformat(d.replace('Z', '+00:00')) for d in self.timeline]
+
+        attribute_map = {
+            attr['name']: attr
+            for attr in self._coverage.attributes
+        }
+
+        for idx, axis in enumerate(axes):
+            band_name = attributes[idx]
+            ts = self.values(band_name)
+            attr_def = attribute_map[band_name]
+            nodata = attr_def['nodata']
+
+            _limit = limit
+            if limit is None:
+                _limit = len(ts)
+
+            for pixel_ts in ts[:_limit]:
+                pixel_ts = [v if v != nodata else None for v in pixel_ts]
+                axis.plot(x, pixel_ts, ls='-', linewidth=1, color='#7F9BB1', alpha=0.2)
+
+            if stats:
+                median = numpy.ma.array(summarize.values(band_name).values('median'))
+                median.mask = median == nodata
+                axis.plot(x, median.tolist(fill_value=None), label=f'{band_name} median',
+                          color='#B16240', linewidth=2.5)
+
+            axis.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
+            axis.legend()
+            axis.set_ylabel(band_name)
+
         fig.autofmt_xdate()
         plt.show()
-
 
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints a time series."""
         return self._repr_html_()
-
 
     def _repr_html_(self):
         """Display the time series as a HTML.

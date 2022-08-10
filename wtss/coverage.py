@@ -127,6 +127,8 @@ class Coverage(dict):
         # Check the parameters
         options_checked = self._check_input_parameters(self, **options)
 
+        # TODO: Implement pagination way to retrieve time series
+
         # Invoke timeseries request
         data = self._service._retrieve_timeseries_or_summarize(
             coverage_name=self.name,

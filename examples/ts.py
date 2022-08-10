@@ -12,21 +12,16 @@ import os
 
 from wtss import *
 
-BDC_AUTH_CLIENT_SECRET = os.getenv("BDC_AUTH_CLIENT_SECRET", None)
-WTSS_SERVER_URL = os.getenv("WTSS_SERVER_URL", None)
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", None)
 
-service = WTSS(url=WTSS_SERVER_URL, access_token=BDC_AUTH_CLIENT_SECRET)
+service = WTSS('https://brazildatacube.dpi.inpe.br/dev/wtss/v2/', access_token=ACCESS_TOKEN)
 
-coverage = service['MOD13Q1-6']
+print(service.coverages)
+coverage = service['S2-SEN2COR_10_16D_STK-1']
 
-timeseries = coverage.ts(attributes = ['NDVI','EVI'],
-                        geom = {"type":"Polygon","coordinates":[[[-54,-12],[-53.99,-12],[-53.99,-11.99],[-54,-11.99],[-54,-12]]]},
-                        start_datetime = '2017-01-01',
-                        end_datetime = '2017-12-31T00:00:00Z')
+timeseries = coverage.ts(attributes=['NDVI', 'EVI'],
+                         geom={"type": "Polygon", "coordinates": [[[-55.46928, 1.47612], [-55.46928, 1.46612], [-55.45928, 1.46612], [-55.45928, 1.47612], [-55.46928, 1.47612]]]},
+                         start_datetime='2017-01-01',
+                         end_datetime='2020-12-31T23:59:00Z')
 
-print('\nnumber_of_pixels:', timeseries.number_of_pixels)
-print('\nNDVI:', timeseries.NDVI)
-print('\nEVI:', timeseries.EVI)
-print('\ntimeline:', timeseries.timeline)
-
-timeseries.plot(attribute='NDVI')
+timeseries.plot()

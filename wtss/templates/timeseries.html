@@ -40,10 +40,10 @@
             </tr>
             
             <!-- The table data will contain a maximum of 5 items -->
-            {% for pixel_id in range(timeseries.number_of_pixels) -%}
+            {% for location_id in range(timeseries.total_locations) -%}
                 {% if loop.index0 < 5 %}    
                     <tr>
-                        <td>{{ pixel_id }}</td>
+                        <td>{{ location_id }}</td>
                         <td>{{ timeseries.values(attr_name)[loop.index0] }}</td>
                     </tr>
                 {% elif loop.index0 == 5 %}

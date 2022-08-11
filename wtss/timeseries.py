@@ -198,6 +198,11 @@ class TimeSeries(dict):
                 axis.plot(x, pixel_ts, ls='-', linewidth=1, color='#7F9BB1', alpha=0.2)
 
             if stats:
+                for quantile_name in ['q1', 'q3']:
+                    quantile = numpy.ma.array(summarize.values(band_name).values(quantile_name))
+                    quantile.mask = quantile == nodata
+                    axis.plot(x, quantile.tolist(fill_value=None), color='#b19541', linewidth=1.5)
+
                 median = numpy.ma.array(summarize.values(band_name).values('median'))
                 median.mask = median == nodata
                 axis.plot(x, median.tolist(fill_value=None), label=f'{band_name} median',

@@ -9,9 +9,7 @@
 """A class that represents a Time Series in WTSS."""
 
 import datetime as dt
-from logging import raiseExceptions
-
-from pystac import Summaries
+from dateutil.parser import parse
 
 from .utils import render_html
 
@@ -23,8 +21,7 @@ class SummarizeAttributeResult:
         """Set all aggregation results as object properties."""
         for aggr_name, aggr_result in aggr_results:
             setattr(self, aggr_name, aggr_result)
-    
-    
+
     def values(self, attr_name):
         """Return the value of a given property of object."""
         return getattr(self, attr_name)
@@ -48,7 +45,6 @@ class Summarize(dict):
         self._coverage = coverage
 
         setattr(self, 'query', data['query'])
-        
         super(Summarize, self).__init__(data or {})
 
         # Add coverage attributes as object property
@@ -58,41 +54,34 @@ class Summarize(dict):
             for attr_name, aggr_results in attributes:
                 setattr(self, attr_name, SummarizeAttributeResult( aggr_results.items() ))
 
-
     @property
     def timeline(self, as_date=False, fmt=''):
         """Return the timeline associated to the time series."""
         return self['results']['timeline'] if self.success_query else None
-
 
     @property
     def success_query(self):
         """Verify if the query returned."""
         return True if len(self['results']['values']) > 0 else False
 
-
     @property
     def attributes(self):
         """Return a list with attribute names selected by user."""
         return [attr for attr in self['results']['values'].keys()] if self.success_query else None
-
 
     @property
     def aggregations(self):
         """Return a list with aggregations names selected by user."""
         return self['query']['aggregations'] if 'aggregations' in self['query'].keys() else ['min','max','mean','median','std']
 
-    
     @property
     def geometry(self):
         """Return the geometry used to query."""
         return self['query']['geom']
 
-
     def values(self, attr_name):
         """Return the value of a given property of object."""
         return getattr(self, attr_name)
-
 
     def df(self):
         """Create a pandas dataframe with summarized data.
@@ -128,7 +117,6 @@ class Summarize(dict):
 
         return df
 
-    
     def plot(self, **options):
         """Plot the summarized time series on a chart.
 
@@ -164,7 +152,7 @@ class Summarize(dict):
         fig, ax = plt.subplots()
 
         # Add timeserie for each attribute
-        x = [dt.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ').date() for d in self.timeline]
+        x = [parse(d).date() for d in self.timeline]
         for attr in attributes:
             y = self.values(attr).values(aggregation)
             ax.plot(x, y, ls='-', linewidth=1.5, label=attr)
@@ -176,7 +164,6 @@ class Summarize(dict):
         plt.legend()
         fig.autofmt_xdate()
         plt.show()
-
 
     def plot_mean_std(self, **options):
         """Plot the mean and std of a desired attribute.
@@ -195,19 +182,19 @@ class Summarize(dict):
 
         # Check options (only valid is 'attribute')
         for option in options:
-            if option!='attribute':
+            if option != 'attribute':
                 raise Exception('Only available options is "attribute"')
 
         # Get attribute value if user set, or use the first
         attribute = options['attribute'] if 'attribute' in options else self.attributes[0]
         if not isinstance(attribute, str):
             raise Exception('attribute must be a string', attribute)
-        
+
         # Create plot
         fig, ax = plt.subplots()
 
         # Add mean, mean+std and mean-std timeserie
-        x = [dt.datetime.fromisoformat(d.replace('Z','+00:00')) for d in self.timeline]
+        x = [parse(d) for d in self.timeline]
         mean = self.values(attribute).values('mean')
         std = self.values(attribute).values('std')
         mean_add_std = [x+y for (x,y) in zip(mean, std)]
@@ -224,15 +211,13 @@ class Summarize(dict):
         fig.autofmt_xdate()
         plt.show()
 
-
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints a time series."""
         return self._repr_html_()
 
-
     def _repr_html_(self):
         """Display the summarized time series as a HTML.
-        
+
         This integrates a rich display in IPython.
         """
         html = render_html('summarize.html', summarize=self)

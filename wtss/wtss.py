@@ -113,11 +113,11 @@ class WTSS:
         """
         url = urljoin(self._url.strip('/') + '/', coverage_name)
         headers = {'x-api-key': self._access_token}
-        request_result = WTSS._request( url,
-                                        method='post',
-                                        op=route,
-                                        headers=headers,
-                                        params=options)
+        request_result = WTSS._request(url,
+                                       method='post',
+                                       op=route,
+                                       headers=headers,
+                                       params=options)
 
         return request_result
 

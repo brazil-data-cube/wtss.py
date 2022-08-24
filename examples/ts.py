@@ -10,6 +10,7 @@
 
 import os
 
+import shapely.geometry
 from wtss import *
 
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", None)
@@ -19,9 +20,8 @@ service = WTSS('https://brazildatacube.dpi.inpe.br/dev/wtss/v2/', access_token=A
 print(service.coverages)
 coverage = service['S2-SEN2COR_10_16D_STK-1']
 
-timeseries = coverage.ts(attributes=['NDVI', 'EVI'],
-                         geom={"type": "Polygon", "coordinates": [[[-55.46928, 1.47612], [-55.46928, 1.46612], [-55.45928, 1.46612], [-55.45928, 1.47612], [-55.46928, 1.47612]]]},
-                         start_datetime='2017-01-01',
-                         end_datetime='2020-12-31T23:59:00Z')
+timeseries = coverage.ts(attributes=('NDVI',),
+                         geom=shapely.geometry.box(-52.179, -16.817, -52.169, -16.807),
+                         start_datetime="2017-01-01", end_datetime="2020-12-31")
 
 timeseries.plot()

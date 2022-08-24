@@ -165,6 +165,9 @@ class TimeSeries(dict):
         except ImportError:
             raise ImportError('You should install Matplotlib and Numpy!')
 
+        if limit < 0:
+            raise ValueError('Limit cannot be negative')
+
         summarize = self.summarize()
 
         # Get attribute value if user defined, otherwise use the first
@@ -193,9 +196,11 @@ class TimeSeries(dict):
             if limit is None:
                 _limit = len(ts)
 
+            alpha = 0.2 if _limit > 100 else 0.6
+
             for pixel_ts in ts[:_limit]:
                 pixel_ts = [v if v != nodata else None for v in pixel_ts]
-                axis.plot(x, pixel_ts, ls='-', linewidth=1, color='#7F9BB1', alpha=0.2)
+                axis.plot(x, pixel_ts, ls='-', linewidth=1, color='#7F9BB1', alpha=alpha)
 
             if stats:
                 for quantile_name in ['q1', 'q3']:

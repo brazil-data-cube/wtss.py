@@ -55,10 +55,10 @@
                 <th>ymax</th>
             </tr>
              <tr>
-                 <td>{{ coverage['spatial_extent'][0] }}</td>
-                 <td>{{ coverage['spatial_extent'][1] }}</td>
-                 <td>{{ coverage['spatial_extent'][2] }}</td>
-                 <td>{{ coverage['spatial_extent'][3] }}</td>
+                 <td>{{ coverage['spatial_extent'].bounds[0] }}</td>
+                 <td>{{ coverage['spatial_extent'].bounds[1] }}</td>
+                 <td>{{ coverage['spatial_extent'].bounds[2] }}</td>
+                 <td>{{ coverage['spatial_extent'].bounds[3] }}</td>
              </tr>
         </table>
     </div>

@@ -12,73 +12,21 @@ Examples
 ========
 
 
-List Available Coverages
--------------------------------
+Retrieve Time Series
+--------------------
 
 
-This example shows the available coverages in WTSS.
+This example shows the basic usage of WTSS for BDC Sentinel-2 16 days data cube.
 
 
-.. literalinclude:: ../../examples/list_coverages.py
+.. literalinclude:: ../../examples/ts.py
    :language: python
    :lines: 11-
 
-
-Summarize Time Series
--------------------------------
-
-
-This example shows how to retrieve a summarized time series.
-
-
-.. literalinclude:: ../../examples/sm.py
-   :language: python
-   :lines: 11-
-
-
-Date Formats
--------------------------------
-
-
-This example shows how different formats can be used to datetime.
-
-
-.. literalinclude:: ../../examples/ts_and_sm_date_format.py
-   :language: python
-   :lines: 11-
-
-
-Lat Long Example
--------------------------------
-
-
-This example shows how to query data with lat long.
-
-
-.. literalinclude:: ../../examples/ts_and_sm_geom_latlong.py
-   :language: python
-   :lines: 11-
-
-
-Shapely Object Geometry
--------------------------------
-
-
-This example shows how to use a shapely geometry for the request.
-
-
-.. literalinclude:: ../../examples/ts_and_sm_geom_shapely.py
-   :language: python
-   :lines: 11-
 
 
 Jupyter Notebook Example
--------------------------------
+------------------------
 
 
-This is a WTSS Client in a jupyter notebook.
-
-
-.. literalinclude:: ../../examples/WTSS_jupyter_notebook.ipynb
-   :language: python
-   :lines: 11-
+You can find this example in `Jupyter Notebook <https://github.com/brazil-data-cube/wtss.py/blob/b-2.0/examples/wtss-ts-example.ipynb>`_.

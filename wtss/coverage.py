@@ -19,6 +19,8 @@ from .summarize import Summarize
 from .timeseries import TimeSeries
 from .utils import render_html
 
+SUPPORTED_GEOMS = ('multipoint', 'point', 'polygon')
+
 
 class Coverage(dict):
     """A class that describes a coverage in WTSS.
@@ -64,7 +66,7 @@ class Coverage(dict):
     @property
     def spatial_extent(self):
         """Return the coverage spatial extent."""
-        return shapely.wkb.loads(self['extent'], hex=True)
+        return shapely.geometry.shape(self['extent'])
 
     @property
     def timeline(self):
@@ -117,12 +119,15 @@ class Coverage(dict):
             except:
                 raise ValueError(f'{key} could not be parsed.')
 
+        if options['geom']['type'].lower() not in SUPPORTED_GEOMS:
+            raise ValueError(f"Geometry {options['geom']} not supported. Use one of {SUPPORTED_GEOMS}")
+
         _validate_datetime('start_datetime')
         _validate_datetime('end_datetime')
 
         return options
 
-    def ts(self, **options):
+    def ts(self, **options) -> TimeSeries:
         """Retrieve the time series."""
         # Check the parameters
         options_checked = self._check_input_parameters(self, **options)

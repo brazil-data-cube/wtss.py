@@ -151,10 +151,16 @@ class Summarize(dict):
         # Create plot
         fig, ax = plt.subplots()
 
+        attribute_map = {
+            attr['name']: attr
+            for attr in self._coverage.attributes
+        }
+
         # Add timeserie for each attribute
         x = [parse(d).date() for d in self.timeline]
         for attr in attributes:
-            y = self.values(attr).values(aggregation)
+            nodata = attribute_map[attr]['nodata']
+            y = [v if v != nodata else None for v in self.values(attr).values(aggregation)]
             ax.plot(x, y, ls='-', linewidth=1.5, label=attr)
 
         # Define plot properties and show plot
@@ -190,15 +196,21 @@ class Summarize(dict):
         if not isinstance(attribute, str):
             raise Exception('attribute must be a string', attribute)
 
+        attribute_map = {
+            attr['name']: attr
+            for attr in self._coverage.attributes
+        }
+        nodata = attribute_map[attribute]['nodata']
+
         # Create plot
         fig, ax = plt.subplots()
 
         # Add mean, mean+std and mean-std timeserie
         x = [parse(d) for d in self.timeline]
-        mean = self.values(attribute).values('mean')
-        std = self.values(attribute).values('std')
-        mean_add_std = [x+y for (x,y) in zip(mean, std)]
-        mean_sub_std = [x-y for (x,y) in zip(mean, std)]
+        mean = [v if v != nodata else None for v in self.values(attribute).values('mean')]
+        std = [v if v != nodata else None for v in self.values(attribute).values('std')]
+        mean_add_std = [x+y for (x, y) in zip(mean, std)]
+        mean_sub_std = [x-y for (x, y) in zip(mean, std)]
         ax.plot(x, mean, ls='-', linewidth=1.5, label='mean', color='darkgreen')
         ax.plot(x, mean_add_std, ls='--', linewidth=1, label='mean + std', color='red')
         ax.plot(x, mean_sub_std, ls='--', linewidth=1, label='mean - std', color='red')

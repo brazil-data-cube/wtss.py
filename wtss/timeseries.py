@@ -125,7 +125,7 @@ class TimeSeries(dict):
             'datetime': pd.to_datetime(datetimes, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
             'value': values,
         })
-        
+
         return df
 
     def summarize(self,
@@ -165,7 +165,7 @@ class TimeSeries(dict):
         except ImportError:
             raise ImportError('You should install Matplotlib and Numpy!')
 
-        if limit < 0:
+        if limit is not None and limit < 0:
             raise ValueError('Limit cannot be negative')
 
         summarize = self.summarize()

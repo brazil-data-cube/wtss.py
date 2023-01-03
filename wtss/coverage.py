@@ -127,21 +127,24 @@ class Coverage(dict):
 
         return options
 
-    def ts(self, **options) -> TimeSeries:
+    def ts(self, params=None, **options) -> TimeSeries:
         """Retrieve the time series."""
         # Check the parameters
         options_checked = self._check_input_parameters(self, **options)
 
         # TODO: Implement pagination way to retrieve time series
 
+        options_checked['pagination'] = 'P3M'
+
         # Invoke timeseries request
         data = self._service._retrieve_timeseries_or_summarize(
             coverage_name=self.name,
             route='timeseries',
+            params=params,
             **options_checked
         )
 
-        return TimeSeries(self, data)
+        return TimeSeries(self, data, **options_checked)
 
     def summarize(self, attributes: List[str],
                   geom: Union[str, shapely.geometry.base.BaseGeometry], **options):

@@ -89,7 +89,7 @@ class WTSS:
 
         return self._collections
 
-    def _retrieve_timeseries_or_summarize(self, coverage_name: str, route: str, **options):
+    def _retrieve_timeseries_or_summarize(self, coverage_name: str, route: str, params=None, **options):
         """Retrieve the time series for a given location.
 
         Keyword Args:
@@ -117,7 +117,8 @@ class WTSS:
                                        method='post',
                                        op=route,
                                        headers=headers,
-                                       params=options)
+                                       params=params,
+                                       json=options)
 
         return request_result
 
@@ -225,7 +226,7 @@ class WTSS:
         return html
 
     @staticmethod
-    def _request(url, op, params, method: str = 'post', headers=None):
+    def _request(url, op, method: str = 'post', headers=None, params=None, json=None):
         """Query the WTSS service using HTTP GET verb and return the result as a JSON document.
 
         Args:
@@ -250,7 +251,7 @@ class WTSS:
         if not verify:  # Remove warning for any insecure https requests
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-        response = getattr(requests, method)(url, headers=headers, json=params, verify=verify)
+        response = getattr(requests, method)(url, headers=headers, params=params, json=json, verify=verify)
 
         response.raise_for_status()
 

@@ -221,7 +221,7 @@ class TimeSeries:
                 axis.plot(x, median.tolist(fill_value=None)[:len(x)], label=f'{band_name} median',
                           color='#B16240', linewidth=2.5)
 
-            plt.draw()
+            fig.canvas.draw()
             plt.pause(0.01)
 
         title = 'Time Series'

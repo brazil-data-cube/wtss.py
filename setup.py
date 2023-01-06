@@ -35,14 +35,14 @@ tests_require = [
 examples_require = [
     'matplotlib>=3.1',
     'numpy>=1.18',
-    'pandas>=1.4'
+    'geopandas>=0.12'
 ]
 
 extras_require = {
     'docs': docs_require,
     'examples': examples_require,
     'tests': tests_require,
-    'matplotlib': ['numpy>=1.13', 'matplotlib>=2.1']
+    'matplotlib': ['numpy>=1.13', 'matplotlib>=3.1']
 }
 
 extras_require['all'] = [req for _, reqs in extras_require.items() for req in reqs]

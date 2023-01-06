@@ -6,6 +6,7 @@ import pandas
 import shapely
 from geopandas import GeoDataFrame
 
+from .summarize import Summarize
 from .timeseries import TimeSeries
 
 
@@ -110,8 +111,12 @@ class TimeSeriesSearch:
 
         return self.coverage._timeseries(**query)
 
-    def df(self) -> GeoDataFrame:
+    def df(self, partial: bool = False) -> GeoDataFrame:
         """Create a GeoPandas dataframe with timeseries data.
+
+        Args:
+            partial (bool): use paginated values in cache from current page. Defaults to ``False``,
+                which means generate DataFrame from all series.
 
         Raises:
             ImportError: If pandas or matplotlib could not be imported.
@@ -133,11 +138,12 @@ class TimeSeriesSearch:
             series = []
             timeline = []
             # Cache to avoid re-paginate time series
-            if total > 0:
+            if not partial and total > 0:
                 location = list(self._ts._locations.values())[0]
-                start, end = location.timeline[0], location.timeline[-1]
+                start_ref = datetime.fromisoformat(self.query.start_datetime.rstrip('Z')).strftime('%Y-%m-%d')
+                end_ref = datetime.fromisoformat(self.query.end_datetime.rstrip('Z')).strftime('%Y-%m-%d')
 
-                expected_timeline = [t for t in self.coverage.timeline if start <= t <= end]
+                expected_timeline = [t for t in self.coverage.timeline if start_ref <= t <= end_ref]
                 # When all timeline is present in a location, skip.
                 # Otherwise, iterate over pagination to fill out.
                 if location.timeline != expected_timeline:
@@ -163,6 +169,11 @@ class TimeSeriesSearch:
 
     def plot(self, paginate: bool = False, **kwargs):
         """Plot the time series on a chart.
+
+        .. tip::
+
+            If you are in Jupyter Notebooks and set ``paginate=True``, make sure
+            to set ``%matplotlib notebook`` on top of notebook.
 
         Args:
             paginate (bool): Plot the data dynamically using pagination. Defaults to ``False``.
@@ -246,3 +257,15 @@ class TimeSeriesSearch:
 
         if ts._pagination.get('next'):
             self._pagination['next'] = ts._pagination['next']
+
+    def summarize(self, operations: Optional[List[str]] = None,
+                  masked: Optional[bool] = False,
+                  mask: Any = None) -> Summarize:
+        """Summarize Time Series object."""
+        return self.coverage.summarize(operations=operations,
+                                       masked=masked,
+                                       mask=mask,
+                                       geom=shapely.geometry.mapping(self.query.geom),
+                                       start_datetime=self.query.start_datetime,
+                                       end_datetime=self.query.end_datetime,
+                                       attributes=self.query.attributes)

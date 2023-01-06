@@ -1,0 +1,248 @@
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Optional, List, Iterator
+
+import pandas
+import shapely
+from geopandas import GeoDataFrame
+
+from .timeseries import TimeSeries
+
+
+@dataclass(frozen=True)
+class TimeSeriesQuery:
+    """Represent the Web Time Series query parameters.
+
+    These values are in conformance of WTSS time series endpoint as described in the
+    `WTSS API - Time Series spec <https://github.com/brazil-data-cube/wtss-spec>`_.
+    """
+
+    params: Any
+    """Define the parameters used on GET."""
+    attributes: List[str]
+    """Define the list of attributes to retrieve time series."""
+    start_datetime: Optional[str]
+    """The start datetime offset for series."""
+    end_datetime: Optional[str]
+    """The end datetime offset for series."""
+    geom: shapely.geometry.base.BaseGeometry
+    """The geometry used to retrieve time series."""
+    pagination: Optional[str] = 'P3M'
+    """The paginator factor used in time series. Defaults to ``P3M``,
+    which means periods of 3 months.
+
+    Follows ISO 8601 Temporal Duration.
+    """
+
+
+@dataclass()
+class TimeSeriesSearch:
+    """Represent a deferred query to WTSS Time series endpoint.
+
+    No request is sent to API until a method is called to iterate
+    through the resulting time series iterator. This feature
+    can be achieved using :meth:`TimeSeriesSearch.iterator` or
+    :meth:`TimeSeriesSearch.df`.
+
+    This interface also support the way to represent time series
+    using `geopandas.GeoDataFrame <https://geopandas.org/en/stable/docs/reference/api/geopandas.GeoDataFrame.html>`_
+    as described below::
+
+        import shapely.geometry
+        from wtss import WTSS
+
+        service = WTSS('https://brazildatacube.dpi.inpe.br/dev/wtss/v2/', access_token='<personal-token>')
+        coverage = service['S2-16D-2']
+        timeseries = coverage.ts(attributes=('NDVI',),
+                                 geom=shapely.geometry.MultiPoint([
+                                    shapely.geometry.Point(-59.60, -5.69),
+                                    shapely.geometry.Point(-59.59, -5.69),
+                                    shapely.geometry.Point(-59.58, -5.69),
+                                 ]),
+                                 start_datetime="2020-01-01", end_datetime="2022-12-31"
+
+        df = timeseries.df()
+        print(df.head())
+
+    You can also plot the time series using builtin :meth:`TimeSeriesSearch.plot` as following::
+
+        timeseries.plot()
+
+    Args:
+        coverage: The coverage instance :class:`wtss.coverage.Coverage`.
+        query: The query filter for time series
+    """
+
+    coverage: 'Coverage'
+    query: TimeSeriesQuery
+    _pagination: Optional[Any] = None
+    _ts: Optional[TimeSeries] = None
+    """Context reference for Time Series.
+
+    The locations time series are used and filled out while iterate through :meth:`TimeSeriesSearch.iterator`."""
+    _df: Optional[GeoDataFrame] = None
+
+    @property
+    def ts(self) -> TimeSeries:
+        """Retrieve the reference of Time Series context object."""
+        return self._ts
+
+    def total_locations(self) -> int:
+        """The total of locations matched using the given query conditions."""
+        if self._ts is None:
+            timeline = self.coverage.timeline
+            if len(timeline) == 0:
+                return 0
+
+            ts = self._time_series(with_pagination=True)
+            self._pagination = ts._pagination
+            self._ts = ts
+        return self._ts.total_locations
+
+    def _pagination_allowed(self) -> bool:
+        # TODO: Consider MultiPoint
+        return self.query.pagination and self.query.geom.geom_type != 'Point'
+
+    def _time_series(self, with_pagination) -> TimeSeries:
+        query = asdict(self.query)
+        if not self._pagination_allowed() or not with_pagination:
+            query.pop('pagination', None)
+
+        return self.coverage._timeseries(**query)
+
+    def df(self) -> GeoDataFrame:
+        """Create a GeoPandas dataframe with timeseries data.
+
+        Raises:
+            ImportError: If pandas or matplotlib could not be imported.
+        """
+        try:
+            import matplotlib.pyplot as plt
+            import pandas as pd
+        except:
+            raise ImportError('Cannot import one of the following libraries: [pandas, matplotlib].')
+
+        if self._df is None:
+            if self._ts is None:
+                total = self.total_locations()
+            else:
+                total = self._ts.total_locations
+
+            attributes = []
+            geoms = []
+            series = []
+            timeline = []
+            # Cache to avoid re-paginate time series
+            if total > 0:
+                location = list(self._ts._locations.values())[0]
+                start, end = location.timeline[0], location.timeline[-1]
+
+                expected_timeline = [t for t in self.coverage.timeline if start <= t <= end]
+                # When all timeline is present in a location, skip.
+                # Otherwise, iterate over pagination to fill out.
+                if location.timeline != expected_timeline:
+                    for _ in self.iterator():
+                        pass
+
+            for attribute in self.query.attributes:
+                for location in self._ts._locations.values():
+                    series_ = location.series['values'][attribute]
+                    attributes.extend([attribute] * len(series_))
+                    series.extend(series_)
+                    geoms.extend([location.geom] * len(series_))
+                    timeline.extend(location.series['timeline'])
+
+            self._df = GeoDataFrame({
+                "attribute": attributes,
+                "geometry": geoms,
+                "value": series,
+                "datetime": pandas.to_datetime(timeline, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
+            }, crs='EPSG:4326')
+
+        return self._df
+
+    def plot(self, paginate: bool = False, **kwargs):
+        """Plot the time series on a chart.
+
+        Args:
+            paginate (bool): Plot the data dynamically using pagination. Defaults to ``False``.
+
+        Keyword Args:
+            stats (bool): Flag to display time series statistics. Default is True.
+                (Only applied on Time Series per Area)
+            limit (int): Limit the number of time series to plot. Default is 1000.
+                When None, display all. You may have performance issues.
+            attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir']
+        Raises:
+            ImportError: If datetime, matplotlib or numpy or datetime could not be imported.
+        """
+        if not self._pagination_allowed():
+            self._ts.plot(**kwargs)
+            return
+
+        if paginate:
+            _ = self.total_locations()
+
+            for ts in self.iterator():
+                ts.plot(**kwargs)
+            return
+        ts = self._time_series(with_pagination=paginate)
+        ts.plot(**kwargs)
+        self._ts = ts
+
+    def iterator(self, progress: bool = False) -> Iterator['TimeSeries']:
+        """Iterator that yields :class:`wtss.timeseries.TimeSeries` instances for each time series group matching
+        the given query parameters.
+
+        Args:
+            progress: Show progress bar while retrieving time series. Defaults to ``False``.
+
+        Yields:
+            TimeSeries: each TimeSeries matching the query criteria
+        """
+        import click
+
+        ts_iterator = self._time_series_it()
+        with click.progressbar(ts_iterator,
+                               length=self._pagination['total_pages']) as bar:
+            if self._ts is None:
+                _ = self.total_locations()
+
+            if progress:
+                ts_iterator = bar
+
+            yield self._ts
+
+            for ts in ts_iterator:
+                yield ts
+
+    def _prepare_paginate(self, pagination: str):
+        query = asdict(self.query)
+        query['pagination'] = pagination
+        ts = self.coverage._timeseries(**query)
+        self._pagination = ts._data['pagination']
+
+    def _next_time_series(self, page: int) -> TimeSeries:
+        options = asdict(self.query)
+        options.setdefault('params', {})
+        options['params']['page'] = page
+        return self.coverage._timeseries(**options)
+
+    def _time_series_it(self):
+        for page in range(self._pagination['next'], self._pagination['total_pages'] + 1):
+            ts = self._next_time_series(page)
+
+            # Modify global ctx
+            self._modify_ts_context(ts)
+
+            # yield self
+            yield ts
+
+    def _modify_ts_context(self, ts: TimeSeries):
+        for idx, location in ts.locations.items():
+            self_location = self._ts._locations[idx]
+
+            self_location.extend(location)
+
+        if ts._pagination.get('next'):
+            self._pagination['next'] = ts._pagination['next']

@@ -17,6 +17,7 @@ from dateutil.parser import parse
 
 from .summarize import Summarize
 from .timeseries import TimeSeries
+from .timeseries_search import TimeSeriesQuery, TimeSeriesSearch
 from .utils import render_html
 
 SUPPORTED_GEOMS = ('multipoint', 'point', 'polygon')
@@ -74,7 +75,7 @@ class Coverage(dict):
         return sorted(self['timeline'])
 
     @staticmethod
-    def _check_input_parameters(self, **options):
+    def _check_input_parameters(**options):
         """Check the input parameters formats."""
         geom = options.get('geom')
         latitude = options.pop('latitude', None)
@@ -127,21 +128,30 @@ class Coverage(dict):
 
         return options
 
-    def ts(self, **options) -> TimeSeries:
+    def ts(self, params=None, **options) -> TimeSeriesSearch:
         """Retrieve the time series."""
         # Check the parameters
-        options_checked = self._check_input_parameters(self, **options)
+        options_checked = self._check_input_parameters(**options)
+        # Ensure to cast Geom to shapely
+        options_checked['geom'] = shapely.geometry.shape(options['geom'])
 
-        # TODO: Implement pagination way to retrieve time series
+        query = TimeSeriesQuery(params=params or {}, **options_checked)
+
+        return TimeSeriesSearch(coverage=self, query=query)
+
+    def _timeseries(self, params=None, **options) -> TimeSeries:
+        """Retrieve the time series."""
+        # Check the parameters
+        options_checked = self._check_input_parameters(**options)
 
         # Invoke timeseries request
         data = self._service._retrieve_timeseries_or_summarize(
             coverage_name=self.name,
             route='timeseries',
+            params=params,
             **options_checked
         )
-
-        return TimeSeries(self, data)
+        return TimeSeries(self, data, **options_checked)
 
     def summarize(self, attributes: List[str],
                   geom: Union[str, shapely.geometry.base.BaseGeometry], **options):
@@ -164,7 +174,7 @@ class Coverage(dict):
                 See more in `Temporal Composition Masking <https://brazil-data-cube.github.io/products/specifications/processing-flow.html#temporal-compositing>`_.
         """
         # Check the parameters
-        options_checked = self._check_input_parameters(self, attributes=attributes, geom=geom, **options)
+        options_checked = self._check_input_parameters(attributes=attributes, geom=geom, **options)
 
         # Invoke timeseries request
         data = self._service._retrieve_timeseries_or_summarize(

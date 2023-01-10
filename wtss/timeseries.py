@@ -9,7 +9,8 @@
 """A class that represents a Time Series in WTSS."""
 
 import datetime as dt
-from typing import Any, Iterator, List, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
 
 import numpy
 import shapely.geometry
@@ -18,7 +19,56 @@ from .summarize import Summarize
 from .utils import render_html
 
 
-class TimeSeries(dict):
+Series = Dict[str, List[Union[float, str]]]
+"""Represent the time series context attributes.
+
+The keys available are:
+- ``timeline``: List of given location series.
+- ``values``: The map attributes and time series."""
+
+
+@dataclass
+class Location:
+    """Represent the time series location.
+
+    Once time series request is made in :class:`wtss.coverage.Coverage`, the location is created
+    and related with time series attributes and values found for location.
+    These values may be dynamically set using pagination.
+    """
+    geom: shapely.geometry.Point
+    series: Series
+
+    @classmethod
+    def from_dict(cls, pixel_center: Any, time_series: Series):
+        geom = shapely.geometry.shape(pixel_center)
+        return cls(geom, time_series)
+
+    @property
+    def x(self):
+        """Retrieve the location x (longitude)."""
+        return self.geom.x
+
+    @property
+    def y(self):
+        """Retrieve the location y (latitude)."""
+        return self.geom.y
+
+    @property
+    def timeline(self) -> List[str]:
+        """Retrieve the location time series associated."""
+        return self.series['timeline']
+
+    def extend(self, other: 'Location'):
+        """Extend time line values into current context."""
+        other_timeline = other.series['timeline']
+        other_series = other.series['values']
+
+        self.series['timeline'].extend(other_timeline)
+        for attribute, series in other_series.items():
+            self.series['values'][attribute].extend(series)
+
+
+class TimeSeries:
     """A class that represents a time series in WTSS.
 
     .. note::
@@ -27,7 +77,7 @@ class TimeSeries(dict):
         `WTSS specification <https://github.com/brazil-data-cube/wtss-spec>`_.
     """
 
-    def __init__(self, coverage: 'Coverage', data):
+    def __init__(self, coverage: 'Coverage', data, **options):
         """Create a TimeSeries object associated to a coverage.
 
         Args:
@@ -35,111 +85,66 @@ class TimeSeries(dict):
         """
         #: Coverage: The associated coverage.
         self._coverage = coverage
+        self._options = options
+        self._data = data
+        self._pagination = None
+        if data.get('pagination'):
+            self._pagination = data['pagination']
 
-        setattr(self, 'query', data['query'])
-
-        super(TimeSeries, self).__init__(data or {})
-
-        # Add all timeseries from an attribute as object property
-        if self.success_query:
-            # Get attribute names and first timeseries
-            values = dict()
-            attributes = [attrs for attrs in self['results'][0]['time_series']['values'].items()]
-            for attr_name, values0 in attributes:
-                values[attr_name] = [values0]
-            # Get remaining timeseries
-            for i in range(1, len(self['results'])):
-                attributes = [attrs for attrs in self['results'][i]['time_series']['values'].items()]
-                for attr_name, timeserie in attributes:
-                    values[attr_name].append(timeserie)
-            # Create self attributes with the results
-            for attr_name, all_timeseries in values.items():
-                setattr(self, attr_name, all_timeseries)
-
-    @property
-    def success_query(self):
-        """Verify if the query returned."""
-        return True if len(self['results']) > 0 else False
+        self._locations = {}
+        for location_ts in data['results']:
+            location = Location.from_dict(**location_ts)
+            self._locations[(location.x, location.y)] = location
 
     @property
     def total_locations(self):
         """Return the computed locations in timeseries."""
-        return len(self['results'])
+        return len(self._data['results'])
 
     @property
     def timeline(self):
         """Return the timeline associated to the time series."""
-        return self['results'][0]['time_series']['timeline'] if self.success_query else None
+        return self._data['results'][0]['time_series']['timeline']
 
     @property
     def attributes(self):
         """Return a list with attribute names selected by user."""
-        return [attr for attr in self['results'][0]['time_series']['values']] if self.success_query else None
+        return [attr for attr in self._data['query']['attributes']]
 
-    @property
-    def attributes_objects(self):
-        """Return a list with attributes objects."""
-        return [attr_obj for attr_obj in self._coverage.attributes if attr_obj['name'] in self.attributes]
-
-    def values(self, attr_name):
+    def values(self, attr_name) -> List[List[float]]:
         """Return the time series for the given attribute."""
-        return getattr(self, attr_name)
+        entries = [
+            location.series['values'][attr_name] for location in self._locations.values()
+        ]
+
+        return entries
 
     @property
-    def locations(self) -> Iterator[shapely.geometry.Point]:
+    def locations(self) -> dict:
         """Iterator that yields location objects.
 
         Each location is a shapely.geometry.Point representing the pixel center.
         """
-        return map(lambda location: shapely.geometry.shape(location['pixel_center']), self['results'])
-
-    def df(self):
-        """Create a pandas dataframe with timeseries data.
-
-        Raises:
-            ImportError: If pandas or matplotlib could not be imported.
-        """
-        try:
-            import matplotlib.pyplot as plt
-            import pandas as pd
-        except:
-            raise ImportError('Cannot import one of the following libraries: [pandas, matplotlib].')
-
-        # Build the dataframe in a tibble format
-        attrs = []
-        datetimes = []
-        pixels_ids = []
-        values = []
-        for attr_name in self.attributes:
-            for pixel_id in range(0, len(self.values(attr_name))):
-                pixel_timeserie = self.values(attr_name)[pixel_id]
-                for i in range(0, len(self.timeline)):
-                    attrs.append(attr_name)
-                    pixels_ids.append(pixel_id)
-                    datetimes.append(self.timeline[i])
-                    values.append(pixel_timeserie[i])
-
-        df = pd.DataFrame({
-            'attribute': attrs,
-            'pixel_id': pixels_ids,
-            'datetime': pd.to_datetime(datetimes, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
-            'value': values,
-        })
-
-        return df
+        return self._locations
 
     def summarize(self,
                   operations: Optional[List[str]] = None,
                   masked: Optional[bool] = False,
                   mask: Any = None) -> Summarize:
         """Summarize the current Time Series object."""
+        start_datetime = self._data['query']['start_datetime']
+        end_datetime = self._data['query']['end_datetime']
+        if self._pagination:
+            start_datetime = self._pagination['start_datetime']
+            end_datetime = self._pagination['end_datetime']
+
         return self._coverage.summarize(operations=operations,
                                         masked=masked,
                                         mask=mask,
-                                        geom=self['query']['geom'],
-                                        start_datetime=self['query']['start_datetime'],
-                                        end_datetime=self['query']['end_datetime'],
-                                        attributes=self['query']['attributes'])
+                                        geom=self._data['query']['geom'],
+                                        start_datetime=start_datetime,
+                                        end_datetime=end_datetime,
+                                        attributes=self._data['query']['attributes'])
 
     def plot(self, stats: bool = True, limit: int = 1000, **options):
         """Plot the time series on a chart.
@@ -173,8 +178,8 @@ class TimeSeries(dict):
         # Get attribute value if user defined, otherwise use the first
         attributes = options.get('attributes') or self.attributes
 
-        # Create plot
-        fig, axes = plt.subplots(len(attributes), 1)
+        axes = plt.gca()
+        fig = plt.gcf()
 
         if len(attributes) == 1:  # For single attribute, transform into sequence to continue workflow
             axes = [axes]
@@ -186,39 +191,46 @@ class TimeSeries(dict):
             for attr in self._coverage.attributes
         }
 
+        locations = list(self._locations.values())
+        _limit = limit
+
         for idx, axis in enumerate(axes):
             band_name = attributes[idx]
-            ts = self.values(band_name)
             attr_def = attribute_map[band_name]
             nodata = attr_def['nodata']
 
-            _limit = limit
             if limit is None:
-                _limit = len(ts)
+                _limit = len(self._locations)
+            else:
+                _limit = min(_limit, len(self.locations))
 
             alpha = 0.2 if _limit > 100 else 0.6
 
-            for pixel_ts in ts[:_limit]:
-                pixel_ts = [v if v != nodata else None for v in pixel_ts]
-                axis.plot(x, pixel_ts, ls='-', linewidth=1, color='#7F9BB1', alpha=alpha)
+            for location in locations[:_limit]:
+                values = [value if value != nodata else None for value in location.series['values'][band_name]]
+                axis.plot(x, values, ls='-', linewidth=1, color='#7F9BB1', alpha=alpha)
 
             if stats:
                 for quantile_name in ['q1', 'q3']:
                     quantile = numpy.ma.array(summarize.values(band_name).values(quantile_name))
                     quantile.mask = quantile == nodata
-                    axis.plot(x, quantile.tolist(fill_value=None), color='#b19541', linewidth=1.5)
+                    axis.plot(x, quantile.tolist(fill_value=None)[:len(x)], color='#b19541', linewidth=1.5)
 
                 median = numpy.ma.array(summarize.values(band_name).values('median'))
                 median.mask = median == nodata
-                axis.plot(x, median.tolist(fill_value=None), label=f'{band_name} median',
+                axis.plot(x, median.tolist(fill_value=None)[:len(x)], label=f'{band_name} median',
                           color='#B16240', linewidth=2.5)
 
-            axis.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
-            axis.legend()
-            axis.set_ylabel(band_name)
+            fig.canvas.draw()
+            plt.pause(0.01)
+
+        title = 'Time Series'
+        if _limit < len(self._locations):
+            title += f' (Showing {_limit} of {len(self._locations)} points)'
+
+        plt.title(title)
 
         fig.autofmt_xdate()
-        plt.show()
 
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints a time series."""

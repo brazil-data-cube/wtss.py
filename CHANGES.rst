@@ -20,6 +20,17 @@ Changes
 =======
 
 
+Version 2.0.0
+-------------
+
+- Add support to deal with WTSS Server 2.0 (`#72 <https://github.com/brazil-data-cube/wtss.py/issues/72>`_)
+- Add pagination and progress bar to retrieve time series by area (`#86 <https://github.com/brazil-data-cube/wtss.py/issues/86>`_)
+- Plot time series quantile (`#84 <https://github.com/brazil-data-cube/wtss.py/issues/84>`_)
+- Add way to retrieve and plot time series summarization (avg, standard_deviation, mean, etc) (`#78 <https://github.com/brazil-data-cube/wtss.py/issues/78>`_)
+- Builtin way to transform time series object into GeoPandas (`#75 <https://github.com/brazil-data-cube/wtss.py/issues/75>`_)
+- Scale time series (`#61 <https://github.com/brazil-data-cube/wtss.py/issues/61>`_)
+
+
 Version 0.7.0 (2022-09-28)
 --------------------------
 

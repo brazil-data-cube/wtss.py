@@ -22,7 +22,6 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Iterator, List, Optional
 
-import pandas
 import shapely
 from geopandas import GeoDataFrame
 
@@ -143,7 +142,7 @@ class TimeSeriesSearch:
         """
         try:
             import matplotlib.pyplot as plt
-            import pandas as pd
+            import pandas
         except:
             raise ImportError('Cannot import one of the following libraries: [pandas, matplotlib].')
 

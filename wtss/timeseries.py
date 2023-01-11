@@ -2,10 +2,19 @@
 # This file is part of Python Client Library for WTSS.
 # Copyright (C) 2022 INPE.
 #
-# Python Client Library for WTSS is free software; you can redistribute it and/or modify it
-# under the terms of the MIT License; see LICENSE file for more details.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
-
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
+#
 """A class that represents a Time Series in WTSS."""
 
 import datetime as dt
@@ -17,7 +26,6 @@ import shapely.geometry
 
 from .summarize import Summarize
 from .utils import render_html
-
 
 Series = Dict[str, List[Union[float, str]]]
 """Represent the time series context attributes.
@@ -35,22 +43,24 @@ class Location:
     and related with time series attributes and values found for location.
     These values may be dynamically set using pagination.
     """
+
     geom: shapely.geometry.Point
     series: Series
 
     @classmethod
     def from_dict(cls, pixel_center: Any, time_series: Series):
+        """Create a WTSS Location from dict keys found in Time Series result."""
         geom = shapely.geometry.shape(pixel_center)
         return cls(geom, time_series)
 
     @property
     def x(self):
-        """Retrieve the location x (longitude)."""
+        """Retrieve location longitude."""
         return self.geom.x
 
     @property
     def y(self):
-        """Retrieve the location y (latitude)."""
+        """Retrieve location latitude."""
         return self.geom.y
 
     @property
@@ -121,7 +131,7 @@ class TimeSeries:
 
     @property
     def locations(self) -> dict:
-        """Iterator that yields location objects.
+        """Retrieve the time series locations matched as dict.
 
         Each location is a shapely.geometry.Point representing the pixel center.
         """

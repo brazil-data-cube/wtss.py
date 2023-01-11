@@ -16,12 +16,8 @@
     along with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 
 
-WTSS
-----
+Utility Functions
+-----------------
 
 
-.. autoclass:: wtss.wtss::WTSS
-    :members:
-    :private-members: _list_coverages, _describe_coverage, _time_series
-    :special-members: __init__, __getitem__, __getattr__
-    :member-order: bysource
+.. autofunction:: wtss.utils::to_datetime

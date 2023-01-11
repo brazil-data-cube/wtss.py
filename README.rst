@@ -2,8 +2,18 @@
     This file is part of Python Client Library for WTSS.
     Copyright (C) 2022 INPE.
 
-    Python Client Library for WTSS is free software; you can redistribute it and/or modify it
-    under the terms of the MIT License; see LICENSE file for more details.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 
 
 =================================================
@@ -11,19 +21,9 @@ Python Client Library for Web Time Series Service
 =================================================
 
 
-.. image:: https://img.shields.io/badge/license-MIT-green
-        :target: https://github.com//brazil-data-cube/wtss.py/blob/master/LICENSE
+.. image:: https://img.shields.io/badge/License-GPLv3-blue.svg
+        :target: https://github.com/brazil-data-cube/wtss.py/blob/master/LICENSE
         :alt: Software License
-
-
-.. image:: https://drone.dpi.inpe.br/api/badges/brazil-data-cube/wtss.py/status.svg
-        :target: https://drone.dpi.inpe.br/brazil-data-cube/wtss.py
-        :alt: Build Status
-
-
-.. image:: https://codecov.io/gh/brazil-data-cube/wtss.py/branch/master/graph/badge.svg?token=E7F8BA09JF
-        :target: https://codecov.io/gh/brazil-data-cube/wtss.py
-        :alt: Code Coverage Test
 
 
 .. image:: https://readthedocs.org/projects/wtss/badge/?version=latest
@@ -31,8 +31,8 @@ Python Client Library for Web Time Series Service
         :alt: Documentation Status
 
 
-.. image:: https://img.shields.io/badge/lifecycle-maturing-blue.svg
-        :target: https://www.tidyverse.org/lifecycle/#maturing
+.. image:: https://img.shields.io/badge/lifecycle-stable-green.svg
+        :target: https://www.tidyverse.org/lifecycle/#stable
         :alt: Software Life Cycle
 
 
@@ -116,5 +116,7 @@ License
 .. admonition::
     Copyright (C) 2022 INPE.
 
-    Python Client Library for WTSS is free software; you can redistribute it and/or modify it
-    under the terms of the MIT License; see LICENSE file for more details.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.

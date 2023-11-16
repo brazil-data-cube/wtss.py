@@ -137,7 +137,7 @@ class TimeSeries(dict):
 
         plt.legend()
 
-        plt.grid(b=True, color='gray', linestyle='--', linewidth=0.5)
+        plt.grid(visible=True, color='gray', linestyle='--', linewidth=0.5)
 
         fig.autofmt_xdate()
 

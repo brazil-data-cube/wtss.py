@@ -1,6 +1,6 @@
 ..
     This file is part of Python Client Library for WTSS.
-    Copyright (C) 2022 INPE.
+    Copyright (C) 2023 INPE.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,6 +18,12 @@
 
 Changes
 =======
+
+
+Version 0.7.1 (2023-11-16)
+--------------------------
+
+- Fix matplotlib deprecation for plot grid time series (`#95 <https://github.com/brazil-data-cube/wtss.py/issues/95>`_)
 
 
 Version 0.7.0 (2022-09-28)

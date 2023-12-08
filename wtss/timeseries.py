@@ -188,11 +188,11 @@ class TimeSeries:
         # Get attribute value if user defined, otherwise use the first
         attributes = options.get('attributes') or self.attributes
 
-        axes = plt.gca()
-        fig = plt.gcf()
+        axes = options.get("axes")
+        fig = options.get("fig")
 
-        if len(attributes) == 1:  # For single attribute, transform into sequence to continue workflow
-            axes = [axes]
+        if fig is None or axes is None:
+            fig, axes = plt.subplots(len(attributes))
 
         x = [dt.datetime.fromisoformat(d.replace('Z', '+00:00')) for d in self.timeline]
 
@@ -231,6 +231,7 @@ class TimeSeries:
                 axis.plot(x, median.tolist(fill_value=None)[:len(x)], label=f'{band_name} median',
                           color='#B16240', linewidth=2.5)
 
+            axis.set_title(f"Band {band_name}")
             fig.canvas.draw()
             plt.pause(0.01)
 
@@ -238,7 +239,7 @@ class TimeSeries:
         if _limit < len(self._locations):
             title += f' (Showing {_limit} of {len(self._locations)} points)'
 
-        plt.title(title)
+        fig.suptitle(title)
 
         fig.autofmt_xdate()
 

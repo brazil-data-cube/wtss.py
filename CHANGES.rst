@@ -2,12 +2,40 @@
     This file is part of Python Client Library for WTSS.
     Copyright (C) 2022 INPE.
 
-    Python Client Library for WTSS is free software; you can redistribute it and/or modify it
-    under the terms of the MIT License; see LICENSE file for more details.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 
 
 Changes
 =======
+
+
+Version 2.0.0
+-------------
+
+- Add support to deal with WTSS Server 2.0 (`#72 <https://github.com/brazil-data-cube/wtss.py/issues/72>`_)
+- Add pagination and progress bar to retrieve time series by area (`#86 <https://github.com/brazil-data-cube/wtss.py/issues/86>`_)
+- Plot time series quantile (`#84 <https://github.com/brazil-data-cube/wtss.py/issues/84>`_)
+- Add way to retrieve and plot time series summarization (avg, standard_deviation, mean, etc) (`#78 <https://github.com/brazil-data-cube/wtss.py/issues/78>`_)
+- Builtin way to transform time series object into GeoPandas (`#75 <https://github.com/brazil-data-cube/wtss.py/issues/75>`_)
+- Scale time series (`#61 <https://github.com/brazil-data-cube/wtss.py/issues/61>`_)
+
+
+Version 0.7.0 (2022-09-28)
+--------------------------
+
+- Change LICENSE to GPL v3
+- Review docs and links
 
 
 Version 0.7.0-3 (2021-03-29)

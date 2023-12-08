@@ -1,8 +1,27 @@
-from dataclasses import asdict, dataclass
-from datetime import datetime
-from typing import Any, Optional, List, Iterator
+#
+# This file is part of Python Client Library for WTSS.
+# Copyright (C) 2022 INPE.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
+#
 
-import pandas
+"""Represent the module that defers a query to WTSS Time series endpoint a Time Series in WTSS."""
+
+from dataclasses import asdict, dataclass, field
+from datetime import datetime
+from typing import Any, Iterator, List, Optional
+
 import shapely
 from geopandas import GeoDataFrame
 
@@ -28,7 +47,7 @@ class TimeSeriesQuery:
     """The end datetime offset for series."""
     geom: shapely.geometry.base.BaseGeometry
     """The geometry used to retrieve time series."""
-    pagination: Optional[str] = 'P3M'
+    pagination: Optional[str] = field(default='P3M')
     """The paginator factor used in time series. Defaults to ``P3M``,
     which means periods of 3 months.
 
@@ -89,7 +108,7 @@ class TimeSeriesSearch:
         return self._ts
 
     def total_locations(self) -> int:
-        """The total of locations matched using the given query conditions."""
+        """Retrieve total of locations matched using the given query conditions."""
         if self._ts is None:
             timeline = self.coverage.timeline
             if len(timeline) == 0:
@@ -123,7 +142,7 @@ class TimeSeriesSearch:
         """
         try:
             import matplotlib.pyplot as plt
-            import pandas as pd
+            import pandas
         except:
             raise ImportError('Cannot import one of the following libraries: [pandas, matplotlib].')
 
@@ -202,8 +221,7 @@ class TimeSeriesSearch:
         self._ts = ts
 
     def iterator(self, progress: bool = False) -> Iterator['TimeSeries']:
-        """Iterator that yields :class:`wtss.timeseries.TimeSeries` instances for each time series group matching
-        the given query parameters.
+        """Iterate that yields :class:`wtss.timeseries.TimeSeries` instances for each time series group matching the given query parameters.
 
         Args:
             progress: Show progress bar while retrieving time series. Defaults to ``False``.

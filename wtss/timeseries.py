@@ -204,6 +204,8 @@ class TimeSeries:
         locations = list(self._locations.values())
         _limit = limit
 
+        fig.show()
+
         for idx, axis in enumerate(axes):
             band_name = attributes[idx]
             attr_def = attribute_map[band_name]
@@ -233,7 +235,6 @@ class TimeSeries:
 
             axis.set_title(f"Band {band_name}")
             fig.canvas.draw()
-            plt.pause(0.01)
 
         title = 'Time Series'
         if _limit < len(self._locations):

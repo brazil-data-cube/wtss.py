@@ -27,8 +27,8 @@ _template_env = jinja2.Environment(loader=_template_loader,
                                    autoescape=jinja2.select_autoescape(['html']))
 
 
-DEFAULT_FIG_SIZE = (10.24, 6.4)
-"""Default figure size consisting in 1024x640."""
+DEFAULT_FIG_SIZE = (10.24, 4.8)
+"""Default figure size consisting in 1024x480."""
 
 
 def render_html(template_name, **kwargs):

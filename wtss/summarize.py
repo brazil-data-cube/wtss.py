@@ -120,7 +120,7 @@ class Summarize(dict):
         df = pd.DataFrame({
             'attribute': attrs,
             'aggregation': aggrs,
-            'datetime': pd.to_datetime(datetimes, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
+            'datetime': pd.to_datetime(datetimes, format="%Y-%m-%d"),
             'value': values,
         })
 

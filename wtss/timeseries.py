@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2022 INPE.
+# Copyright (C) 2024 INPE.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import numpy
 import shapely.geometry
 
 from .summarize import Summarize
-from .utils import render_html
+from .utils import DEFAULT_FIG_SIZE, render_html
 
 Series = Dict[str, List[Union[float, str]]]
 """Represent the time series context attributes.
@@ -140,13 +140,16 @@ class TimeSeries:
     def summarize(self,
                   operations: Optional[List[str]] = None,
                   masked: Optional[bool] = False,
-                  mask: Any = None) -> Summarize:
+                  mask: Any = None,
+                  start_datetime: Optional[str] = None,
+                  end_datetime: Optional[str] = None) -> Summarize:
         """Summarize the current Time Series object."""
-        start_datetime = self._data['query']['start_datetime']
-        end_datetime = self._data['query']['end_datetime']
-        if self._pagination:
-            start_datetime = self._pagination['start_datetime']
-            end_datetime = self._pagination['end_datetime']
+        if not start_datetime and not end_datetime:
+            start_datetime = self._data['query']['start_datetime']
+            end_datetime = self._data['query']['end_datetime']
+            if self._pagination:
+                start_datetime = self._pagination['start_datetime']
+                end_datetime = self._pagination['end_datetime']
 
         return self._coverage.summarize(operations=operations,
                                         masked=masked,
@@ -167,6 +170,7 @@ class TimeSeries:
 
         Keyword Args:
             attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
+            figsize (sequence): Matplot Figure Size. Default to 10.24, 6.4.
             line_styles (sequence): Not implemented yet.
             markers (sequence): Not implemented yet.
             line_width (numeric): Not implemented yet.
@@ -183,8 +187,6 @@ class TimeSeries:
         if limit is not None and limit < 0:
             raise ValueError('Limit cannot be negative')
 
-        summarize = self.summarize()
-
         # Get attribute value if user defined, otherwise use the first
         attributes = options.get('attributes') or self.attributes
 
@@ -192,7 +194,10 @@ class TimeSeries:
         fig = options.get("fig")
 
         if fig is None or axes is None:
-            fig, axes = plt.subplots(len(attributes))
+            figsize = options.get("figsize", DEFAULT_FIG_SIZE)
+            fig, axes = plt.subplots(len(attributes), figsize=figsize)
+            if len(attributes) == 1:
+                axes = [axes]
 
         x = [dt.datetime.fromisoformat(d.replace('Z', '+00:00')) for d in self.timeline]
 
@@ -202,6 +207,13 @@ class TimeSeries:
         }
 
         locations = list(self._locations.values())
+
+        summarize_kwargs = {}
+        if locations:
+            summarize_kwargs["start_datetime"] = locations[0].timeline[0]
+            summarize_kwargs["end_datetime"] = locations[0].timeline[-1]
+        summarize = self.summarize(**summarize_kwargs)
+
         _limit = limit
 
         fig.show()

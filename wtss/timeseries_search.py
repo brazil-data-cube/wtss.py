@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2022 INPE.
+# Copyright (C) 2024 INPE.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -156,11 +156,14 @@ class TimeSeriesSearch:
             geoms = []
             series = []
             timeline = []
+
+            fmt = "%Y-%m-%d"
+
             # Cache to avoid re-paginate time series
             if not partial and total > 0:
                 location = list(self._ts._locations.values())[0]
-                start_ref = datetime.fromisoformat(self.query.start_datetime.rstrip('Z')).strftime('%Y-%m-%d')
-                end_ref = datetime.fromisoformat(self.query.end_datetime.rstrip('Z')).strftime('%Y-%m-%d')
+                start_ref = datetime.fromisoformat(self.query.start_datetime.rstrip('Z')).strftime(fmt)
+                end_ref = datetime.fromisoformat(self.query.end_datetime.rstrip('Z')).strftime(fmt)
 
                 expected_timeline = [t for t in self.coverage.timeline if start_ref <= t <= end_ref]
                 # When all timeline is present in a location, skip.
@@ -181,7 +184,7 @@ class TimeSeriesSearch:
                 "attribute": attributes,
                 "geometry": geoms,
                 "value": series,
-                "datetime": pandas.to_datetime(timeline, format="%Y-%m-%dT%H:%M:%SZ", errors='ignore'),
+                "datetime": pandas.to_datetime(timeline, format=fmt),
             }, crs='EPSG:4326')
 
         return self._df

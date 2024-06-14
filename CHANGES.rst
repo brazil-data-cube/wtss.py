@@ -1,6 +1,6 @@
 ..
     This file is part of Python Client Library for WTSS.
-    Copyright (C) 2022 INPE.
+    Copyright (C) 2024 INPE.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,9 +19,14 @@
 Changes
 =======
 
+Version 2.0.0.alpha2
+--------------------
 
-Version 2.0.0
--------------
+- Fix time series plot related Axes object iteration (close #98)
+
+
+Version 2.0.0.alpha1
+--------------------
 
 - Add support to deal with WTSS Server 2.0 (`#72 <https://github.com/brazil-data-cube/wtss.py/issues/72>`_)
 - Add pagination and progress bar to retrieve time series by area (`#86 <https://github.com/brazil-data-cube/wtss.py/issues/86>`_)

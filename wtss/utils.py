@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2022 INPE.
+# Copyright (C) 2024 INPE.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +25,10 @@ _template_loader = jinja2.FileSystemLoader(searchpath=resource_filename(__name__
 
 _template_env = jinja2.Environment(loader=_template_loader,
                                    autoescape=jinja2.select_autoescape(['html']))
+
+
+DEFAULT_FIG_SIZE = (10.24, 6.4)
+"""Default figure size consisting in 1024x640."""
 
 
 def render_html(template_name, **kwargs):

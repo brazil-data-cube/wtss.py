@@ -1,6 +1,6 @@
 #
 # This file is part of Python Client Library for WTSS.
-# Copyright (C) 2022 INPE.
+# Copyright (C) 2024 INPE.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,4 +18,4 @@
 
 """Version information for Python Client Library for WTSS."""
 
-__version__ = '2.0.0-alpha1'
+__version__ = '2.0.0-alpha2'

@@ -25,7 +25,7 @@ import numpy
 import shapely.geometry
 
 from .summarize import Summarize
-from .utils import DEFAULT_FIG_SIZE, render_html
+from .utils import render_html
 
 Series = Dict[str, List[Union[float, str]]]
 """Represent the time series context attributes.
@@ -170,7 +170,6 @@ class TimeSeries:
 
         Keyword Args:
             attributes (sequence): A sequence like ('red', 'nir') or ['red', 'nir'] .
-            figsize (sequence): Matplot Figure Size. Default to 10.24, 6.4.
             line_styles (sequence): Not implemented yet.
             markers (sequence): Not implemented yet.
             line_width (numeric): Not implemented yet.
@@ -194,8 +193,7 @@ class TimeSeries:
         fig = options.get("fig")
 
         if fig is None or axes is None:
-            figsize = options.get("figsize", DEFAULT_FIG_SIZE)
-            fig, axes = plt.subplots(len(attributes), figsize=figsize)
+            fig, axes = plt.subplots(len(attributes))
             if len(attributes) == 1:
                 axes = [axes]
 

@@ -20,7 +20,7 @@
 
 from dateutil.parser import parse
 
-from .utils import DEFAULT_FIG_SIZE, render_html
+from .utils import render_html
 
 
 class SummarizeAttributeResult:
@@ -152,10 +152,8 @@ class Summarize(dict):
         if not isinstance(aggregation, str):
             raise Exception('aggregation must be a string', aggregation)
 
-        figsize = options.get("figsize", DEFAULT_FIG_SIZE)
-
         # Create plot
-        fig, ax = plt.subplots(figsize=figsize)
+        fig, ax = plt.subplots()
 
         attribute_map = {
             attr['name']: attr
@@ -208,10 +206,8 @@ class Summarize(dict):
         }
         nodata = attribute_map[attribute]['nodata']
 
-        figsize = options.get("figsize", DEFAULT_FIG_SIZE)
-
         # Create plot
-        fig, ax = plt.subplots(figsize=figsize)
+        fig, ax = plt.subplots()
 
         # Add mean, mean+std and mean-std timeserie
         x = [parse(d) for d in self.timeline]

@@ -210,6 +210,8 @@ class TimeSeriesSearch:
             ImportError: If datetime, matplotlib or numpy or datetime could not be imported.
         """
         if not self._pagination_allowed():
+            _ = self.total_locations()
+
             self._ts.plot(**kwargs)
             return
 

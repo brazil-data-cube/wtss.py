@@ -159,13 +159,13 @@ class TimeSeries:
                                         end_datetime=end_datetime,
                                         attributes=self._data['query']['attributes'])
 
-    def plot(self, stats: bool = True, limit: int = 1000, **options):
+    def plot(self, stats: bool = True, limit: Optional[int] = None, **options):
         """Plot the time series on a chart.
 
         Args:
             stats (bool): Flag to display time series statistics. Default is True.
                 (Only applied on Time Series per Area)
-            limit (int): Limit the number of time series to plot. Default is 1000.
+            limit (Optiona[int]): Limit the number of time series to plot. Default is None.
                 When None, display all. You may have performance issues.
 
         Keyword Args:

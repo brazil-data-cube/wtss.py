@@ -143,7 +143,7 @@ class Coverage(dict):
         # Check the parameters
         options_checked = self._check_input_parameters(**options)
         # Ensure to cast Geom to shapely
-        options_checked['geom'] = shapely.geometry.shape(options['geom'])
+        options_checked['geom'] = shapely.geometry.shape(options_checked["geom"])
 
         query = TimeSeriesQuery(params=params or {}, **options_checked)
 

@@ -19,7 +19,7 @@
 
 import datetime as dt
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy
 import shapely.geometry
@@ -46,12 +46,13 @@ class Location:
 
     geom: shapely.geometry.Point
     series: Series
+    pixel_size: Tuple[float, float]
 
     @classmethod
-    def from_dict(cls, pixel_center: Any, time_series: Series):
+    def from_dict(cls, pixel_center: Any, pixel_size: Any, time_series: Series):
         """Create a WTSS Location from dict keys found in Time Series result."""
         geom = shapely.geometry.shape(pixel_center)
-        return cls(geom, time_series)
+        return cls(geom, time_series, pixel_size=pixel_size)
 
     @property
     def x(self):

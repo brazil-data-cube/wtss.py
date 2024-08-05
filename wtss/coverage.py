@@ -91,6 +91,12 @@ class Coverage(dict):
         latitude = options.pop('latitude', None)
         longitude = options.pop('longitude', None)
 
+        # Legacy properties.
+        start_date = options.pop("start_date", None)
+        end_date = options.pop("end_date", None)
+        options.setdefault("start_datetime", start_date)
+        options.setdefault("end_datetime", end_date)
+
         if geom is None and (latitude is None or longitude is None):
             raise RuntimeError('Missing parameter geom or latitude/longitude.')
 

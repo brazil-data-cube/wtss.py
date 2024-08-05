@@ -115,7 +115,7 @@ class TimeSeries:
     @property
     def timeline(self):
         """Return the timeline associated to the time series."""
-        return self._data['results'][0]['time_series']['timeline']
+        return self._data['results'][0]['time_series']['timeline'] if len(self._data["results"]) > 0 else []
 
     @property
     def attributes(self):

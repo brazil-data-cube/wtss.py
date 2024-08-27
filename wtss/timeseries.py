@@ -255,7 +255,7 @@ class TimeSeries:
 
         fig.suptitle(title, fontsize=22)
 
-        fig.subplots_adjust(top=0.96) #Adjust distance the position of subl=plot border to figure border.
+        fig.subplots_adjust(top=0.96) #Adjust distance the position of subplot border to figure border.
 
         fig.autofmt_xdate()
 

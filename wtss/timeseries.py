@@ -194,7 +194,9 @@ class TimeSeries:
         fig = options.get("fig")
 
         if fig is None or axes is None:
-            fig, axes = plt.subplots(len(attributes))
+            fig, axes = plt.subplots(len(attributes), figsize=(16, 5*len(attributes)))
+            # fig, axes = plt.subplots(len(attributes), figsize=plt.figaspect(0.5))
+
             if len(attributes) == 1:
                 axes = [axes]
 
@@ -244,14 +246,16 @@ class TimeSeries:
                 axis.plot(x, median.tolist(fill_value=None)[:len(x)], label=f'{band_name} median',
                           color='#B16240', linewidth=2.5)
 
-            axis.set_title(f"Band {band_name}")
+            axis.text(-0.05, 0.5, f"{band_name}", transform=axis.transAxes, rotation=90, va='center', ha='left', fontsize=20) #Adjust subplot title position. Displacement ranges from 0 to 1. Negative to left and bottom, positive to right and up.
             fig.canvas.draw()
 
         title = 'Time Series'
         if _limit < len(self._locations):
             title += f' (Showing {_limit} of {len(self._locations)} points)'
 
-        fig.suptitle(title)
+        fig.suptitle(title, fontsize=22)
+
+        fig.subplots_adjust(top=0.96) #Adjust distance the position of subl=plot border to figure border.
 
         fig.autofmt_xdate()
 

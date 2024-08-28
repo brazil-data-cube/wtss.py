@@ -105,6 +105,13 @@ class TimeSeriesSearch:
     @property
     def ts(self) -> TimeSeries:
         """Retrieve the reference of Time Series context object."""
+        if self._ts is None:
+            _ = self.total_locations()
+
+            if self._pagination is not None:
+                for _ in self.iterator():
+                    ...
+
         return self._ts
 
     def total_locations(self) -> int:

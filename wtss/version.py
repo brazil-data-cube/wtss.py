@@ -18,4 +18,4 @@
 
 """Version information for Python Client Library for WTSS."""
 
-__version__ = '2.0.0-alpha2'
+__version__ = '2.0.0-alpha3'

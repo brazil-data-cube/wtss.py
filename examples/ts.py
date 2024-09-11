@@ -14,9 +14,7 @@ import shapely.geometry
 
 from wtss import *
 
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN", None)
-
-service = WTSS('https://brazildatacube.dpi.inpe.br/dev/wtss/v2/', access_token=ACCESS_TOKEN)
+service = WTSS('https://data.inpe.br/bdc/wtss/v4/')
 
 print(service.coverages)
 coverage = service['S2-16D-2']
@@ -30,7 +28,7 @@ total = timeseries.total_locations()
 print(total)
 
 # You can plot all once
-timeseries.plot(paginate=True)
+timeseries.plot()
 
 # Create GeoPandas DataFrame of Series
 df = timeseries.df()

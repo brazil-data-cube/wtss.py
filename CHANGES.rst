@@ -19,14 +19,15 @@
 Changes
 =======
 
-Version 2.0.0.alpha2
---------------------
+Version 2.0.0.alpha2 (2024-09-11)
+---------------------------------
 
 - Fix time series plot related Axes object iteration (close #98)
+- Fix unmapped properties `start_date` and `pixel_size` (close #105)
 
 
-Version 2.0.0.alpha1
---------------------
+Version 2.0.0.alpha1 (2024-08-27)
+---------------------------------
 
 - Add support to deal with WTSS Server 2.0 (`#72 <https://github.com/brazil-data-cube/wtss.py/issues/72>`_)
 - Add pagination and progress bar to retrieve time series by area (`#86 <https://github.com/brazil-data-cube/wtss.py/issues/86>`_)

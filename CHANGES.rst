@@ -19,7 +19,7 @@
 Changes
 =======
 
-Version 2.0.0.alpha2 (2024-09-11)
+Version 2.0.0.alpha3 (2024-09-11)
 ---------------------------------
 
 - Fix time series plot related Axes object iteration (close #98)

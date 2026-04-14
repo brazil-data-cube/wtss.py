@@ -253,9 +253,9 @@ class TimeSeries:
         if _limit < len(self._locations):
             title += f' (Showing {_limit} of {len(self._locations)} points)'
 
-        fig.suptitle(title, fontsize=22)
+        fig.suptitle(title, fontsize=22, y=0.99)
 
-        fig.subplots_adjust(top=0.96) #Adjust distance the position of subplot border to figure border.
+        fig.subplots_adjust(top=0.90) #Adjust distance the position of subplot border to figure border.
 
         fig.autofmt_xdate()
 

@@ -1,0 +1,70 @@
+[project]
+name = "wtss"
+version = "2.0.0-alpha4"
+description = "Python Client Library for WTSS"
+readme = "README.rst"
+requires-python = ">=3.8"
+license = {text = "GPLv3"}
+authors = [
+    {name = "Brazil Data Cube Team", email = "brazildatacube@inpe.br"},
+]
+keywords = [
+    "Web Time Series Service", "Time series", "Earth Observations"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+dependencies = [
+    'Click>=7.0',
+    'geopandas>=0.12',
+    'jsonschema>=3.2',
+    'requests>=2.20',
+    'Jinja2>=2.10',
+    'python-dateutil>=2.8',
+    'Shapely>=1.8',
+]
+
+[project.optional-dependencies]
+docs = [
+    "Sphinx>=2.2",
+    "sphinx_rtd_theme",
+    "sphinx-copybutton",
+]
+tests = [
+    "coverage>=4.5",
+    "pytest>=5.2",
+    "pytest-cov>=2.8",
+    "pytest-pep8>=1.0",
+    "pydocstyle>=4.0",
+    "isort>4.3",
+    "check-manifest>=0.40",
+]
+examples = [
+    "matplotlib>=3.1",
+    "numpy>=1.18",
+]
+dev = ["wtss[docs,tests,examples]", 'matplotlib>=3.1,<4', 'numpy>=1.13']
+
+[project.scripts]
+wtss = "wtss.cli:cli"
+
+[build-system]
+requires = ["setuptools>=67.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["wtss*"]
+exclude = ["tests*"]
+namespaces = false

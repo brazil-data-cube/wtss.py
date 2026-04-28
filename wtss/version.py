@@ -18,4 +18,6 @@
 
 """Version information for Python Client Library for WTSS."""
 
-__version__ = '2.0.0-alpha3'
+from importlib.metadata import version
+
+__version__ = version(__package__)

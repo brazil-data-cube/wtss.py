@@ -19,9 +19,9 @@
 """Utility functions for WTSS client library."""
 
 import jinja2
-from pkg_resources import resource_filename
+from importlib.resources import files
 
-_template_loader = jinja2.FileSystemLoader(searchpath=resource_filename(__name__, 'templates/'))
+_template_loader = jinja2.FileSystemLoader(searchpath=files('wtss').joinpath('templates'))
 
 _template_env = jinja2.Environment(loader=_template_loader,
                                    autoescape=jinja2.select_autoescape(['html']))

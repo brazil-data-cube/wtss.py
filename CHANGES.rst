@@ -19,6 +19,12 @@
 Changes
 =======
 
+Version 2.0.0.alpha4 (2026-04-28)
+---------------------------------
+
+- Drop support of pkg_resources (#111)
+- Fix Plot title is not well positioned (#109)
+
 Version 2.0.0.alpha3 (2024-09-11)
 ---------------------------------
 

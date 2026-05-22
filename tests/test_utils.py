@@ -16,34 +16,16 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/gpl-3.0.html>.
 #
 
-"""Unit-test configuration for the WTSS Python Client Library for."""
+"""Unit-test for WTSS utility functions."""
 
-import json
-import os
-from pathlib import Path
-
-import pytest
-
-_JSON_PATH = Path(__file__).with_name('json')
+from wtss.utils import render_html
 
 
-@pytest.fixture
-def URL():
-    """Return the WTSS URL to be used in tests."""
-    return os.getenv('WTSS_TEST_URL', 'http://localhost')
+def test_render_html_loads_package_template():
+    """Verify packaged templates load without pkg_resources."""
+    rendered = render_html('wtss.html',
+                           url='https://example.test/wtss',
+                           coverages=['MOD13Q1'])
 
-
-@pytest.fixture
-def ListCoverageResponse():
-    """Return the list of coverages to be validated."""
-    doc = (_JSON_PATH / 'list_coverages_response.json').read_text()
-
-    return json.loads(doc)
-
-
-@pytest.fixture
-def MOD13Q1():
-    """Return the MOD13Q1 metadata."""
-    doc = (_JSON_PATH / 'describe_coverage_response.json').read_text()
-
-    return json.loads(doc)
+    assert 'https://example.test/wtss' in rendered
+    assert 'MOD13Q1' in rendered

@@ -19,11 +19,11 @@
 """Utility functions for WTSS client library."""
 
 from datetime import datetime
+from pathlib import Path
 
 import jinja2
-from pkg_resources import resource_filename
 
-_template_loader = jinja2.FileSystemLoader(searchpath=resource_filename(__name__, 'templates/'))
+_template_loader = jinja2.FileSystemLoader(searchpath=Path(__file__).with_name('templates'))
 
 _template_env = jinja2.Environment(loader=_template_loader,
                                    autoescape=jinja2.select_autoescape(['html']))

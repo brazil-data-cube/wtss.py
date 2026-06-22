@@ -22,10 +22,10 @@ This module introduces a class named ``wtss`` that can be used to retrieve
 satellite image time series for a given location.
 """
 import os
-from urllib.error import HTTPError
 from urllib.parse import urljoin
 
 import requests
+from requests.exceptions import HTTPError
 import urllib3
 
 from .coverage import Coverage

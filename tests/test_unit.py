@@ -19,6 +19,9 @@
 """Unit tests that do not require a live WTSS server."""
 
 import pytest
+import requests
+
+from wtss.wtss import WTSS
 
 
 class TestStrtobool:
@@ -47,3 +50,29 @@ class TestStrtobool:
         from wtss.wtss import strtobool
         with pytest.raises(ValueError):
             strtobool(value)
+
+
+class TestServiceInfo:
+    """Regression tests for B2: requests.exceptions.HTTPError handling.
+
+    ``_service_info`` used to catch ``urllib.error.HTTPError``, which is never
+    raised by ``requests``. A 4xx/5xx response leaked the requests HTTPError
+    untouched instead of becoming a friendly ``RuntimeError``.
+    """
+
+    def test_http_error_becomes_runtime_error(self, monkeypatch):
+        """A requests HTTPError from the root request must become RuntimeError."""
+        def raise_http_error(*args, **kwargs):
+            raise requests.exceptions.HTTPError('500 Server Error')
+
+        monkeypatch.setattr(WTSS, '_request', staticmethod(raise_http_error))
+
+        with pytest.raises(RuntimeError, match='Not a valid Web Time Series Service'):
+            WTSS('http://example.com/wtss')
+
+    def test_missing_key_becomes_runtime_error(self, monkeypatch):
+        """A malformed root response (missing keys) must become RuntimeError."""
+        monkeypatch.setattr(WTSS, '_request', staticmethod(lambda *a, **k: {}))
+
+        with pytest.raises(RuntimeError, match='Not a valid Web Time Series Service'):
+            WTSS('http://example.com/wtss')

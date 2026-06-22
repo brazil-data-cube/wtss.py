@@ -114,16 +114,20 @@ def ts(verbose, url, coverage, attributes,
 
     cv = service[coverage]
 
-    ts = cv.ts(latitude=latitude,
-               longitude=longitude,
-               attributes=attributes,
-               start_datetime=start_datetime,
-               end_datetime=end_datetime)
+    search = cv.ts(latitude=latitude,
+                   longitude=longitude,
+                   attributes=attributes,
+                   start_datetime=start_datetime,
+                   end_datetime=end_datetime)
 
-    for attr in ts.attributes:
-        click.secho(f'\t{attr}: {ts.values(attr)}')
+    # cv.ts() returns a deferred TimeSeriesSearch; the parsed TimeSeries
+    # (with attributes/values/timeline) is exposed via its .ts property.
+    timeseries = search.ts
 
-    click.secho(f'\ttimeline: {ts.timeline}')
+    for attr in timeseries.attributes:
+        click.secho(f'\t{attr}: {timeseries.values(attr)}')
+
+    click.secho(f'\ttimeline: {timeseries.timeline}')
 
     if verbose:
         click.secho('\tFinished!', bold=False, fg='yellow')

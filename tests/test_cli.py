@@ -26,6 +26,45 @@ from test_mock import (MOCK_URL, _register_coverage, _register_root,
 from wtss.cli import cli
 
 
+class TestListCoverages:
+    """``wtss list-coverages`` must print coverages from a mocked server."""
+
+    @responses.activate
+    def test_lists_coverage_names(self):
+        _register_root(responses.mock)
+        runner = CliRunner()
+        result = runner.invoke(cli, ['list-coverages', '-u', MOCK_URL])
+        assert result.exit_code == 0
+        assert 'MOD13Q1-6' in result.output
+        assert 'S2-16D-2' in result.output
+
+    @responses.activate
+    def test_verbose_lists_coverages(self):
+        # Verbose iterates over every coverage, so all must be mocked.
+        _register_root(responses.mock)
+        _register_coverage(responses.mock)
+        responses.mock.add(responses.GET, f'{MOCK_URL}/S2-16D-2',
+                           json={'fullname': 'S2-16D-2'}, status=200)
+        runner = CliRunner()
+        result = runner.invoke(cli, ['list-coverages', '-u', MOCK_URL, '-v'])
+        assert result.exit_code == 0
+        assert 'MOD13Q1-6' in result.output
+
+
+class TestDescribe:
+    """``wtss describe`` must print coverage metadata from a mocked server."""
+
+    @responses.activate
+    def test_describe_coverage(self):
+        _register_root(responses.mock)
+        _register_coverage(responses.mock)
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ['describe', '-u', MOCK_URL, '-c', 'MOD13Q1-6'])
+        assert result.exit_code == 0
+        assert 'MOD13Q1-6' in result.output
+
+
 class TestTs:
     """``wtss ts`` must retrieve and print a time series end-to-end.
 

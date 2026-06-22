@@ -18,6 +18,8 @@
 
 """Unit tests that do not require a live WTSS server."""
 
+import inspect
+
 import pytest
 import requests
 
@@ -76,3 +78,29 @@ class TestServiceInfo:
 
         with pytest.raises(RuntimeError, match='Not a valid Web Time Series Service'):
             WTSS('http://example.com/wtss')
+
+
+class TestCliTs:
+    """Regression tests for B3: the ``wtss ts`` command options.
+
+    Click declared ``--start-date``/``--end-date`` (kwargs ``start_date`` /
+    ``end_date``), but the callback expects ``start_datetime`` /
+    ``end_datetime``, so any invocation raised ``TypeError`` on binding.
+    """
+
+    def test_option_names_match_callback_signature(self):
+        """Every Click option must map to a parameter the callback accepts."""
+        from wtss.cli import ts
+
+        callback_params = set(inspect.signature(ts.callback).parameters)
+        click_params = {p.name for p in ts.params}
+
+        unexpected = click_params - callback_params
+        assert not unexpected, f'options not accepted by callback: {unexpected}'
+
+    def test_datetime_options_present(self):
+        """The renamed datetime options must exist."""
+        from wtss.cli import ts
+
+        click_params = {p.name for p in ts.params}
+        assert {'start_datetime', 'end_datetime'} <= click_params

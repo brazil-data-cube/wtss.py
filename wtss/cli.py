@@ -95,10 +95,10 @@ def describe(verbose, url, coverage, access_token=None):
               help='Latitude in EPSG:4326')
 @click.option('--longitude', required=True, type=float,
               help='Longitude in EPSG:4326')
-@click.option('--start-date', required=False, type=str,
-              help='Start date')
-@click.option('--end-date', required=False, type=str,
-              help='End date')
+@click.option('--start-datetime', required=False, type=str,
+              help='Start date-time (ISO 8601)')
+@click.option('--end-datetime', required=False, type=str,
+              help='End date-time (ISO 8601)')
 @click.option('--access-token', required=False, type=str,
               help='User Personal Access Token.')
 def ts(verbose, url, coverage, attributes,

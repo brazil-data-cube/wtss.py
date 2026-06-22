@@ -22,7 +22,6 @@ This module introduces a class named ``wtss`` that can be used to retrieve
 satellite image time series for a given location.
 """
 import os
-from distutils.util import strtobool
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 
@@ -31,6 +30,29 @@ import urllib3
 
 from .coverage import Coverage
 from .utils import render_html
+
+#: Truthy/falsy string values accepted by :func:`strtobool`.
+_TRUE_VALUES = {'y', 'yes', 't', 'true', 'on', '1'}
+_FALSE_VALUES = {'n', 'no', 'f', 'false', 'off', '0'}
+
+
+def strtobool(value: str) -> int:
+    """Convert a string representation of truth to ``1`` (true) or ``0`` (false).
+
+    Inline replacement for ``distutils.util.strtobool``, which was removed in
+    Python 3.12 (PEP 632). Accepts the same values: true is ``y``, ``yes``,
+    ``t``, ``true``, ``on`` and ``1``; false is ``n``, ``no``, ``f``, ``false``,
+    ``off`` and ``0``. Comparison is case-insensitive.
+
+    Raises:
+        ValueError: If ``value`` is not a recognized truth value.
+    """
+    normalized = str(value).strip().lower()
+    if normalized in _TRUE_VALUES:
+        return 1
+    if normalized in _FALSE_VALUES:
+        return 0
+    raise ValueError(f'invalid truth value {value!r}')
 
 
 class WTSS:

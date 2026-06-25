@@ -71,6 +71,9 @@ class TestServiceInfo:
     ``_service_info`` used to catch ``urllib.error.HTTPError``, which is never
     raised by ``requests``. A 4xx/5xx response leaked the requests HTTPError
     untouched instead of becoming a friendly ``RuntimeError``.
+
+    Note: since B4 the metadata is fetched lazily, so the error surfaces on the
+    first metadata access (``.coverages``), not in the constructor.
     """
 
     def test_http_error_becomes_runtime_error(self, monkeypatch):
@@ -80,15 +83,43 @@ class TestServiceInfo:
 
         monkeypatch.setattr(WTSS, '_request', staticmethod(raise_http_error))
 
+        service = WTSS('http://example.com/wtss')
         with pytest.raises(RuntimeError, match='Not a valid Web Time Series Service'):
-            WTSS('http://example.com/wtss')
+            service.coverages
 
     def test_missing_key_becomes_runtime_error(self, monkeypatch):
         """A malformed root response (missing keys) must become RuntimeError."""
         monkeypatch.setattr(WTSS, '_request', staticmethod(lambda *a, **k: {}))
 
+        service = WTSS('http://example.com/wtss')
         with pytest.raises(RuntimeError, match='Not a valid Web Time Series Service'):
-            WTSS('http://example.com/wtss')
+            service.coverages
+
+
+class TestLazyServiceInfo:
+    """Regression tests for B4: ``__init__`` must not perform any HTTP.
+
+    The service root used to be fetched eagerly in the constructor, coupling
+    instantiation to network state. It is now fetched on first metadata use.
+    """
+
+    def test_construct_makes_no_request(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(
+            WTSS, '_request',
+            staticmethod(lambda *a, **k: (calls.append(k.get('op')), _ROOT)[1]),
+        )
+        service = WTSS('http://example.com/wtss')
+        assert calls == []  # B4: nothing fetched yet
+
+        _ = service.coverages  # first metadata access triggers the fetch
+        assert calls == ['/']
+
+    def test_version_triggers_fetch(self, monkeypatch):
+        _stub_request(monkeypatch, {'wtss_version': '2.0', 'links': []})
+        service = WTSS('http://example.com/wtss')
+        assert service._version is None  # not fetched on construction
+        assert service.version == '2.0'  # property fetches lazily
 
 
 class TestCliTs:

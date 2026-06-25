@@ -97,7 +97,8 @@ class WTSS:
 
         self.parameters = dict(access_token=access_token)
 
-        self._links = []
+        #: list: Service links; ``None`` until the metadata is fetched lazily (B4).
+        self._links = None
         self._collections = []
 
         #: bool: TLS verification flag, read once instead of on every request (B20).
@@ -110,8 +111,6 @@ class WTSS:
         if not self._verify_ssl and disable_ssl_warnings:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-        self._service_info()
-
     def _service_info(self):
         try:
             root = self._request(self._url, method='get', op='/', params=self.parameters, verify=self._verify_ssl)
@@ -119,6 +118,17 @@ class WTSS:
             self._links = root['links']
         except (KeyError, HTTPError) as e:
             raise RuntimeError('Not a valid Web Time Series Service.') from e
+
+    def _ensure_service_info(self):
+        """Fetch the service metadata on first use (B4: no HTTP in ``__init__``)."""
+        if self._links is None:
+            self._service_info()
+
+    @property
+    def version(self):
+        """Return the WTSS server version, fetching service info on first use."""
+        self._ensure_service_info()
+        return self._version
 
     @property
     def coverages(self):
@@ -132,6 +142,8 @@ class WTSS:
             HTTPError: If the server response indicates an error.
             ValueError: If the response body is not a json document.
         """
+        self._ensure_service_info()
+
         if len(self._collections) == 0:
             self._collections = [
                 link['title'].rsplit(' ', 1)[-1]

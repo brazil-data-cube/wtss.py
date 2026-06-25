@@ -152,7 +152,8 @@ class TestServiceRoot:
     def test_version_parsed(self):
         _register_root(responses.mock)
         wtss = WTSS(MOCK_URL, access_token='fake-token')
-        assert wtss._version == '2.0'
+        # Service info is fetched lazily (B4); the version property triggers it.
+        assert wtss.version == '2.0'
 
     @responses.activate
     def test_coverages_listed(self):

@@ -334,6 +334,23 @@ class TimeSeries:
             },
         )
 
+    def to_netcdf(self, path=None, apply_scale: bool = False, mask_nodata: bool = False, **kwargs):
+        """Export the time series to NetCDF, via the labelled :meth:`to_xarray`.
+
+        Args:
+            path (str, optional): Destination file. When ``None`` (default), the
+                NetCDF document is returned as ``bytes`` instead of being written.
+            apply_scale (bool): Apply the band scale/offset client-side (Ciclo iv).
+            mask_nodata (bool): Replace nodata samples with ``NaN`` (Ciclo iv).
+            **kwargs: Forwarded to :meth:`xarray.Dataset.to_netcdf`
+                (e.g. ``engine``, ``encoding``).
+
+        Raises:
+            ImportError: If xarray or a NetCDF backend is unavailable.
+        """
+        dataset = self.to_xarray(apply_scale=apply_scale, mask_nodata=mask_nodata)
+        return dataset.to_netcdf(path, **kwargs)
+
     @property
     def locations(self) -> dict:
         """Retrieve the time series locations matched as dict.

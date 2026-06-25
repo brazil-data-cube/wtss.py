@@ -35,6 +35,10 @@ from wtss.timeseries import TimeSeries
 #: xarray is an optional dependency; skip its tests when it is absent.
 _HAS_XARRAY = importlib.util.find_spec('xarray') is not None
 
+#: NetCDF export also needs a backend (scipy/netCDF4/h5netcdf).
+_CAN_NETCDF = _HAS_XARRAY and any(
+    importlib.util.find_spec(m) for m in ('scipy', 'netCDF4', 'h5netcdf'))
+
 TIMELINE = ['2017-01-01', '2017-01-17', '2017-02-02']
 
 
@@ -201,6 +205,36 @@ class TestToXarray:
         assert vals[0] == pytest.approx(0.1)
         assert vals[1] != vals[1]  # NaN
         assert vals[2] == pytest.approx(0.2)
+
+
+@pytest.mark.skipif(not _CAN_NETCDF, reason='xarray or a NetCDF backend is missing')
+class TestToNetcdf:
+    """Ciclo v: to_netcdf() round-trips through the labelled Dataset."""
+
+    def _ts(self):
+        return _timeseries(
+            [_location_multi(-54.0, -12.0, {'NDVI': [1000.0, 2000.0, 3000.0]})],
+            attributes=['NDVI'],
+        )
+
+    def test_returns_bytes_when_no_path(self):
+        import io
+
+        import xarray
+
+        data = self._ts().to_netcdf()
+        assert isinstance(data, (bytes, bytearray, memoryview))
+        ds = xarray.open_dataset(io.BytesIO(bytes(data)))
+        assert ds['NDVI'].values.tolist() == [1000.0, 2000.0, 3000.0]
+
+    def test_writes_to_path(self, tmp_path):
+        import xarray
+
+        path = tmp_path / 'series.nc'
+        self._ts().to_netcdf(str(path))
+        assert path.exists()
+        with xarray.open_dataset(str(path)) as ds:
+            assert ds.sizes['time'] == 3
 
 
 class TestDataFrameLong:

@@ -59,7 +59,11 @@ examples = [
 xarray = [
     "xarray>=2022.3",
 ]
-dev = ["wtss[docs,tests,examples,xarray]", 'matplotlib>=3.1,<4', 'numpy>=1.13']
+io = [
+    "wtss[xarray]",
+    "scipy>=1.7",
+]
+dev = ["wtss[docs,tests,examples,xarray,io]", 'matplotlib>=3.1,<4', 'numpy>=1.13']
 
 [project.scripts]
 wtss = "wtss.cli:cli"

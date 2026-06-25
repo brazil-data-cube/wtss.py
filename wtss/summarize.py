@@ -26,9 +26,14 @@ from .utils import render_html
 class SummarizeAttributeResult:
     """A class that represents a summarized attribute."""
 
-    def __init__(self, aggr_results:dict):
-        """Set all aggregation results as object properties."""
-        for aggr_name, aggr_result in aggr_results:
+    def __init__(self, aggr_results: dict):
+        """Set all aggregation results as object properties.
+
+        Args:
+            aggr_results (dict): Mapping of aggregation name to its result list,
+                e.g. ``{'mean': [...], 'std': [...]}``.
+        """
+        for aggr_name, aggr_result in aggr_results.items():
             setattr(self, aggr_name, aggr_result)
 
     def values(self, attr_name):
@@ -61,7 +66,7 @@ class Summarize(dict):
             attributes = [attr_result for attr_result in self['results']['values'].items()]
             # For each attribute, create a property
             for attr_name, aggr_results in attributes:
-                setattr(self, attr_name, SummarizeAttributeResult( aggr_results.items() ))
+                setattr(self, attr_name, SummarizeAttributeResult(aggr_results))
 
     @property
     def timeline(self):

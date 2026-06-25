@@ -35,7 +35,7 @@ matplotlib.use('Agg')
 
 import pytest  # noqa: E402
 
-from wtss.summarize import Summarize  # noqa: E402
+from wtss.summarize import Summarize, SummarizeAttributeResult  # noqa: E402
 
 
 def _summarize(timeline=None):
@@ -60,6 +60,20 @@ class TestTimelineProperty:
     def test_timeline_has_no_phantom_args(self):
         params = list(inspect.signature(Summarize.timeline.fget).parameters)
         assert params == ['self']
+
+
+class TestSummarizeAttributeResult:
+    """B14: ``SummarizeAttributeResult`` accepts a dict, as its type declares."""
+
+    def test_accepts_dict_directly(self):
+        result = SummarizeAttributeResult({'mean': [0.5, 0.6], 'std': [0.1, 0.2]})
+        assert result.values('mean') == [0.5, 0.6]
+        assert result.values('std') == [0.1, 0.2]
+
+    def test_summarize_exposes_aggregations(self):
+        """The Summarize wiring must keep working end to end."""
+        summ = _summarize()
+        assert summ.values('NDVI').values('mean') == [0.5, 0.6]
 
 
 class TestDataFrameDatetime:

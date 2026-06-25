@@ -243,12 +243,20 @@ class TimeSeriesSearch:
         """
         import click
 
+        # Load the first page (and pagination metadata) before reading
+        # self._pagination or building the progress bar, so iterator() works
+        # when called directly and not only after .ts/.df (F13).
+        if self._ts is None:
+            _ = self.total_locations()
+
+        # Non-paginated query (e.g. a single Point): just yield the one series.
+        if self._pagination is None:
+            yield self._ts
+            return
+
         ts_iterator = self._time_series_it()
         with click.progressbar(ts_iterator,
                                length=self._pagination['total_pages']) as bar:
-            if self._ts is None:
-                _ = self.total_locations()
-
             if progress:
                 ts_iterator = bar
 

@@ -148,11 +148,9 @@ class TestPaginationStitching:
         # A single location whose NDVI series spans all three pages.
         assert ts.values('NDVI') == [[1000, 2000, 3000]]
 
-    def test_iterator_yields_one_timeseries_per_page(self, service):
+    def test_iterator_standalone_yields_one_per_page(self, service):
+        """F13: iterator() works when called directly, without priming."""
         search = _search(service)
-        # iterator() reads self._pagination before priming it, so callers must
-        # materialise page 1 first (which is exactly what the .ts property does).
-        search.total_locations()
         pages = list(search.iterator())
         # First yield is page 1 (already loaded), then pages 2 and 3.
         assert len(pages) == 3
@@ -162,3 +160,32 @@ class TestPaginationStitching:
         assert df['value'].tolist() == [1000, 2000, 3000]
         assert df['datetime'].dt.strftime('%Y-%m-%d').tolist() == FULL_TIMELINE
         assert len(df) == 3
+
+
+class TestIteratorWithoutPagination:
+    """F13: a non-paginated (Point) search must iterate to a single series."""
+
+    def test_point_iterator_yields_single_series(self):
+        point_response = {
+            'results': [
+                {
+                    'pixel_center': PIXEL_CENTER,
+                    'pixel_size': [231.65, 231.65],
+                    'time_series': {'timeline': ['2017-01-01'], 'values': {'NDVI': [1000]}},
+                }
+            ],
+            'query': dict(_QUERY),  # no 'pagination' block in the response
+        }
+        with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
+            rsps.add(responses.GET, f'{MOCK_URL}/', json=ROOT_RESPONSE, status=200)
+            rsps.add(responses.GET, f'{MOCK_URL}/MOD13Q1-6', json=COVERAGE_RESPONSE, status=200)
+            rsps.add(responses.POST, f'{MOCK_URL}/MOD13Q1-6/timeseries',
+                     json=point_response, status=200)
+            service = WTSS(MOCK_URL, access_token='fake-token')
+            search = service['MOD13Q1-6'].ts(
+                attributes=['NDVI'],
+                geom={'type': 'Point', 'coordinates': [-54.0, -12.0]},
+                start_datetime='2017-01-01',
+                end_datetime='2017-03-31',
+            )
+            assert len(list(search.iterator())) == 1

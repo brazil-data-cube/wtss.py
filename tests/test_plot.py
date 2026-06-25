@@ -265,39 +265,47 @@ class TestPlotValidation:
             ts.plot(limit=-1)
 
 
-class TestPlotKnownBugs:
-    """Regression coverage that pins down the catalogued plotting bugs."""
+class TestPlotFixedBugs:
+    """Regression coverage locking in the fixes for the catalogued plotting bugs."""
 
-    def test_show_is_called_before_drawing_B10(self, service):
-        """B10: ``plot`` triggers ``fig.show()`` (warns under the Agg backend)."""
+    def test_show_called_after_drawing_B10(self, service, monkeypatch):
+        """B10: ``fig.show()`` must fire only once every series has been drawn."""
+        from matplotlib.figure import Figure
+
+        captured = {}
+        # Record how many lines exist on the figure at the moment show() runs;
+        # swallow the call so the Agg backend does not warn.
+        monkeypatch.setattr(
+            Figure, 'show',
+            lambda self, *a, **k: captured.update(lines=sum(len(ax.lines) for ax in self.axes)),
+        )
         ts = _point_timeseries(service)
-        with pytest.warns(UserWarning, match='non-interactive'):
-            ts.plot(attributes=['NDVI'])
+        ts.plot(attributes=['NDVI'])
 
-    def test_empty_attributes_break_subplots_B12(self, service):
-        """B12: an empty attribute list reaches ``plt.subplots(0)`` and raises."""
+        # Before the fix this was 0 (show ran first); now the series are drawn.
+        assert captured['lines'] > 0
+
+    def test_empty_attributes_raise_clear_error_B12(self, service):
+        """B12: an empty attribute list is rejected with a clear message."""
         coverage = service['MOD13Q1-6']
         data = {
             'results': POINT_TS_RESPONSE['results'],
             'query': {**POINT_TS_RESPONSE['query'], 'attributes': []},
         }
         ts = TimeSeries(coverage, data)
-        with pytest.raises(ValueError, match='positive integer'):
+        with pytest.raises(ValueError, match='No attributes available to plot'):
             ts.plot()
 
-    def test_unset_limit_when_loop_never_runs_B11(self, service):
-        """B11: with caller-supplied empty ``axes`` the per-attribute loop is skipped,
-        leaving ``_limit`` as ``None`` and tripping ``None < len(...)``.
+    def test_limit_defined_when_loop_never_runs_B11(self, service):
+        """B11: caller-supplied empty ``axes`` used to leave ``_limit`` unset and
+        trip ``None < len(...)``. The cap is now computed before the loop, so the
+        call completes cleanly even when no axis is drawn.
         """
-        coverage = service['MOD13Q1-6']
-        data = {
-            'results': POINT_TS_RESPONSE['results'],
-            'query': {**POINT_TS_RESPONSE['query'], 'attributes': []},
-        }
-        ts = TimeSeries(coverage, data)
+        ts = _point_timeseries(service)
         fig = plt.figure()
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            with pytest.raises(TypeError):
-                # fig + empty axes bypass subplots(0), exposing the _limit gap.
-                ts.plot(fig=fig, axes=[])
+            # Non-empty attributes + empty axes: the loop body never runs.
+            ts.plot(attributes=['NDVI'], fig=fig, axes=[])
+
+        assert fig._suptitle.get_text() == 'Time Series'

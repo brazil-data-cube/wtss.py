@@ -190,6 +190,9 @@ class TimeSeries:
         # Get attribute value if user defined, otherwise use the first
         attributes = options.get('attributes') or self.attributes
 
+        if not attributes:
+            raise ValueError('No attributes available to plot.')
+
         axes = options.get("axes")
         fig = options.get("fig")
 
@@ -215,21 +218,19 @@ class TimeSeries:
             summarize_kwargs["end_datetime"] = locations[0].timeline[-1]
         summarize = self.summarize(**summarize_kwargs)
 
-        _limit = limit
+        # Compute the number of locations to draw once, before the loop, so it
+        # is always defined even when the per-attribute loop does not run.
+        if limit is None:
+            _limit = len(self._locations)
+        else:
+            _limit = min(limit, len(self._locations))
 
-        fig.show()
+        alpha = 0.2 if _limit > 100 else 0.6
 
         for idx, axis in enumerate(axes):
             band_name = attributes[idx]
             attr_def = attribute_map[band_name]
             nodata = attr_def['nodata']
-
-            if limit is None:
-                _limit = len(self._locations)
-            else:
-                _limit = min(_limit, len(self.locations))
-
-            alpha = 0.2 if _limit > 100 else 0.6
 
             for location in locations[:_limit]:
                 values = [value if value != nodata else None for value in location.series['values'][band_name]]
@@ -258,6 +259,9 @@ class TimeSeries:
         fig.subplots_adjust(top=0.90) #Adjust distance the position of subplot border to figure border.
 
         fig.autofmt_xdate()
+
+        # Show only after every series has been drawn.
+        fig.show()
 
     def _repr_pretty_(self, p, cycle):
         """Customize how the REPL pretty-prints a time series."""

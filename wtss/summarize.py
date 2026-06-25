@@ -64,7 +64,7 @@ class Summarize(dict):
                 setattr(self, attr_name, SummarizeAttributeResult( aggr_results.items() ))
 
     @property
-    def timeline(self, as_date=False, fmt=''):
+    def timeline(self):
         """Return the timeline associated to the time series."""
         return self['results']['timeline'] if self.success_query else None
 
@@ -120,7 +120,9 @@ class Summarize(dict):
         df = pd.DataFrame({
             'attribute': attrs,
             'aggregation': aggrs,
-            'datetime': pd.to_datetime(datetimes, format="%Y-%m-%d"),
+            # Let pandas infer the format so both date-only and full ISO 8601
+            # timestamps (e.g. '2017-01-01T00:00:00Z') are accepted (B15).
+            'datetime': pd.to_datetime(datetimes),
             'value': values,
         })
 
@@ -145,12 +147,12 @@ class Summarize(dict):
         # Get attributes value if user defined, otherwise use all available
         attributes = options['attributes'] if 'attributes' in options else self.attributes
         if not isinstance(attributes, list):
-            raise Exception('attributes must be a list', attributes)
+            raise TypeError(f'attributes must be a list, got {type(attributes).__name__}')
 
         # Get aggregation value if user defined, otherwise use 'mean'
         aggregation = options['aggregation'] if 'aggregation' in options else 'mean'
         if not isinstance(aggregation, str):
-            raise Exception('aggregation must be a string', aggregation)
+            raise TypeError(f'aggregation must be a string, got {type(aggregation).__name__}')
 
         # Create plot
         fig, ax = plt.subplots()
@@ -193,12 +195,12 @@ class Summarize(dict):
         # Check options (only valid is 'attribute')
         for option in options:
             if option != 'attribute':
-                raise Exception('Only available options is "attribute"')
+                raise ValueError(f'Unsupported option {option!r}; only "attribute" is available.')
 
         # Get attribute value if user set, or use the first
         attribute = options['attribute'] if 'attribute' in options else self.attributes[0]
         if not isinstance(attribute, str):
-            raise Exception('attribute must be a string', attribute)
+            raise TypeError(f'attribute must be a string, got {type(attribute).__name__}')
 
         attribute_map = {
             attr['name']: attr

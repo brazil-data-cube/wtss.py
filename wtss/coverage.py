@@ -48,6 +48,9 @@ class Coverage(dict):
         #: WTSS: The associated WTSS client to be used by the coverage object.
         self._service = service
 
+        #: Cache for the sorted timeline (see B7); computed on first access.
+        self._sorted_timeline = None
+
         super(Coverage, self).__init__(metadata or {})
 
     @property
@@ -82,8 +85,10 @@ class Coverage(dict):
 
     @property
     def timeline(self):
-        """Return the coverage timeline."""
-        return sorted(self['timeline'])
+        """Return the coverage timeline, sorted once and cached."""
+        if self._sorted_timeline is None:
+            self._sorted_timeline = sorted(self['timeline'])
+        return self._sorted_timeline
 
     @staticmethod
     def _check_input_parameters(**options):

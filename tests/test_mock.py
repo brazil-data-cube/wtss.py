@@ -193,6 +193,11 @@ class TestCoverageMetadata:
         cv = service['MOD13Q1-6']
         assert cv.timeline == ['2017-01-01', '2017-01-17', '2017-02-02']
 
+    def test_timeline_is_cached(self, service):
+        """B7: the sorted timeline is computed once and reused, not re-sorted."""
+        cv = service['MOD13Q1-6']
+        assert cv.timeline is cv.timeline
+
     def test_spatial_extent_is_geometry(self, service):
         cv = service['MOD13Q1-6']
         # shapely geometry exposes a bounds tuple (minx, miny, maxx, maxy).

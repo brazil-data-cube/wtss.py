@@ -130,6 +130,59 @@ class TimeSeries:
 
         return entries
 
+    def __getitem__(self, attr_name: str):
+        """Return the time series of an attribute as a time-aligned pandas Series.
+
+        Unlike :meth:`values`, the result carries the timeline (as a
+        ``DatetimeIndex``) and the location, so values are correlated without
+        digging into private structures (addresses B9).
+
+        - **Single location**: a :class:`pandas.Series` indexed by datetime.
+        - **Multiple locations**: a :class:`pandas.Series` with a MultiIndex
+          ``(datetime, location)``, where ``location`` is the pixel-center
+          ``(longitude, latitude)`` tuple. Use ``.unstack('location')`` to get a
+          wide :class:`pandas.DataFrame` (one column per location).
+
+        Raises:
+            KeyError: If ``attr_name`` is not present in the time series.
+            ImportError: If pandas could not be imported.
+        """
+        try:
+            import pandas
+        except ImportError:
+            raise ImportError('You should install pandas!')
+
+        locations = list(self._locations.values())
+
+        if not locations:
+            return pandas.Series([], dtype='float64', name=attr_name)
+
+        if attr_name not in locations[0].series['values']:
+            raise KeyError(
+                f"Attribute '{attr_name}' not found. Available: "
+                f"{list(locations[0].series['values'])}"
+            )
+
+        if len(locations) == 1:
+            location = locations[0]
+            index = pandas.to_datetime(location.timeline)
+            return pandas.Series(location.series['values'][attr_name],
+                                 index=index, name=attr_name)
+
+        # Multiple locations: build a (datetime, location) MultiIndex Series.
+        times, locs, vals = [], [], []
+        for location in locations:
+            label = (location.x, location.y)
+            for moment, value in zip(location.timeline, location.series['values'][attr_name]):
+                times.append(moment)
+                locs.append(label)
+                vals.append(value)
+
+        index = pandas.MultiIndex.from_arrays(
+            [pandas.to_datetime(times), locs], names=['datetime', 'location'])
+
+        return pandas.Series(vals, index=index, name=attr_name).sort_index()
+
     @property
     def locations(self) -> dict:
         """Retrieve the time series locations matched as dict.

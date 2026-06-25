@@ -24,6 +24,7 @@ import numpy
 import pytest
 import requests
 import urllib3
+from requests.adapters import HTTPAdapter
 
 from wtss.coverage import Coverage
 from wtss.wtss import WTSS
@@ -120,6 +121,62 @@ class TestLazyServiceInfo:
         service = WTSS('http://example.com/wtss')
         assert service._version is None  # not fetched on construction
         assert service.version == '2.0'  # property fetches lazily
+
+
+class _FakeResponse:
+    """Minimal stand-in for a requests.Response."""
+
+    def __init__(self, data):
+        self._data = data
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._data
+
+
+class TestHttpSession:
+    """Regression tests for F3: a pooled Session with timeout and retries.
+
+    Each request used to open a fresh connection with no timeout and no retry.
+    The client now reuses a ``requests.Session`` with a retry/backoff adapter
+    and forwards a per-request timeout.
+    """
+
+    def test_session_is_created(self):
+        assert isinstance(WTSS('http://example.com/wtss')._session, requests.Session)
+
+    def test_retry_adapter_defaults(self):
+        service = WTSS('http://example.com/wtss')
+        retry = service._session.get_adapter('https://example.com/wtss').max_retries
+        assert retry.total == 3
+        assert retry.backoff_factor == 0.5
+        assert {502, 503, 504} <= set(retry.status_forcelist)
+
+    def test_both_schemes_use_retry_adapter(self):
+        service = WTSS('http://example.com/wtss')
+        for scheme in ('http://x', 'https://x'):
+            assert isinstance(service._session.get_adapter(scheme), HTTPAdapter)
+
+    def test_retries_and_timeout_are_configurable(self):
+        service = WTSS('http://example.com/wtss', retries=5, timeout=7)
+        assert service._timeout == 7
+        assert service._session.get_adapter('https://x').max_retries.total == 5
+
+    def test_request_forwards_timeout_and_verify(self, monkeypatch):
+        service = WTSS('http://example.com/wtss', timeout=12)
+        captured = {}
+
+        def fake_request(method, url, **kwargs):
+            captured.update(kwargs)
+            return _FakeResponse({'wtss_version': '2.0', 'links': []})
+
+        monkeypatch.setattr(service._session, 'request', fake_request)
+        _ = service.coverages  # triggers the lazy service-info request
+
+        assert captured['timeout'] == 12
+        assert captured['verify'] is True
 
 
 class TestCliTs:

@@ -25,8 +25,10 @@ import os
 from urllib.parse import urljoin
 
 import requests
+from requests.adapters import HTTPAdapter
 from requests.exceptions import HTTPError
 import urllib3
+from urllib3.util.retry import Retry
 
 from .coverage import Coverage
 from .utils import render_html
@@ -69,7 +71,9 @@ class WTSS:
                  validate = False,
                  access_token: str = None,
                  verify_ssl: bool = None,
-                 disable_ssl_warnings: bool = False):
+                 disable_ssl_warnings: bool = False,
+                 timeout: float = 30,
+                 retries: int = 3):
         """Create a WTSS client attached to the given host address (an URL).
 
         Args:
@@ -83,6 +87,10 @@ class WTSS:
                 ``InsecureRequestWarning``. Only takes effect when ``verify_ssl`` is
                 False. Defaults to False so the client never mutates global urllib3
                 state behind the user's back.
+            timeout (float, optional): Per-request timeout in seconds. Defaults to 30.
+                Pass ``None`` to wait indefinitely.
+            retries (int, optional): Number of automatic retries for transient
+                server errors (502/503/504), with exponential backoff. Defaults to 3.
         """
         #: str: URL for the WTSS server.
         self._url = url
@@ -111,9 +119,22 @@ class WTSS:
         if not self._verify_ssl and disable_ssl_warnings:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+        #: float: Per-request timeout (seconds) applied to every HTTP call (F3).
+        self._timeout = timeout
+
+        #: requests.Session: Reused connection with retry/backoff on transient
+        #: errors, instead of a fresh connection per request (F3).
+        self._session = requests.Session()
+        retry = Retry(total=retries, backoff_factor=0.5,
+                      status_forcelist=(502, 503, 504),
+                      allowed_methods=frozenset({'GET', 'POST'}))
+        adapter = HTTPAdapter(max_retries=retry)
+        self._session.mount('http://', adapter)
+        self._session.mount('https://', adapter)
+
     def _service_info(self):
         try:
-            root = self._request(self._url, method='get', op='/', params=self.parameters, verify=self._verify_ssl)
+            root = self._request(self._url, method='get', op='/', params=self.parameters)
             self._version = root['wtss_version']
             self._links = root['links']
         except (KeyError, HTTPError) as e:
@@ -176,13 +197,12 @@ class WTSS:
         """
         url = urljoin(self._url.strip('/') + '/', coverage_name)
         headers = {'x-api-key': self._access_token}
-        request_result = WTSS._request(url,
+        request_result = self._request(url,
                                        method='post',
                                        op=route,
                                        headers=headers,
                                        params=params,
-                                       json=options,
-                                       verify=self._verify_ssl)
+                                       json=options)
 
         return request_result
 
@@ -213,7 +233,7 @@ class WTSS:
             raise KeyError(f'Coverage {key} not found.')
 
         # url = urljoin(self._url, key)
-        coverage = self._request(self._url, op=key, method='get', params=self.parameters, verify=self._verify_ssl)
+        coverage = self._request(self._url, op=key, method='get', params=self.parameters)
 
         return Coverage(service=self, metadata=coverage)
 
@@ -295,9 +315,11 @@ class WTSS:
 
         return html
 
-    @staticmethod
-    def _request(url, op, method: str = 'post', headers=None, params=None, json=None, verify: bool = True):
-        """Query the WTSS service using HTTP GET verb and return the result as a JSON document.
+    def _request(self, url, op, method: str = 'post', headers=None, params=None, json=None):
+        """Query the WTSS service over the shared session and return JSON.
+
+        Uses the instance :class:`requests.Session` (connection reuse + retry on
+        transient errors) and applies the configured timeout and TLS verification.
 
         Args:
             url (str): URL for the WTSS server.
@@ -317,7 +339,9 @@ class WTSS:
 
         url = '/'.join(s.strip('/') for s in url_components)
 
-        response = getattr(requests, method)(url, headers=headers, params=params, json=json, verify=verify)
+        response = self._session.request(method, url, headers=headers, params=params,
+                                         json=json, verify=self._verify_ssl,
+                                         timeout=self._timeout)
 
         response.raise_for_status()
 

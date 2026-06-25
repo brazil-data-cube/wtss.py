@@ -183,6 +183,69 @@ class TimeSeries:
 
         return pandas.Series(vals, index=index, name=attr_name).sort_index()
 
+    def df(self, format: str = 'long'):
+        """Return the time series as a pandas DataFrame.
+
+        Builds on :meth:`__getitem__`, so values are always aligned with their
+        timeline and location (addresses the same gap as B9, Ciclo iii).
+
+        Args:
+            format (str): Either ``'long'`` (default) or ``'wide'``.
+
+                - ``'long'``: one row per (datetime, attribute, location), with a
+                  single ``value`` column. Index is ``(datetime, attribute,
+                  location)``.
+                - ``'wide'``: index is the ``datetime``. Columns are the
+                  attributes for a single location, or a ``(attribute, location)``
+                  MultiIndex for several locations.
+
+        Raises:
+            ValueError: If ``format`` is not ``'long'`` or ``'wide'``.
+            ImportError: If pandas could not be imported.
+        """
+        try:
+            import pandas
+        except ImportError:
+            raise ImportError('You should install pandas!')
+
+        if format not in ('long', 'wide'):
+            raise ValueError(f"format must be 'long' or 'wide', got {format!r}")
+
+        attributes = self.attributes
+        locations = list(self._locations.values())
+
+        if not locations:
+            return pandas.DataFrame()
+
+        if format == 'long':
+            times, attrs, locs, vals = [], [], [], []
+            for attr in attributes:
+                for location in locations:
+                    label = (location.x, location.y)
+                    for moment, value in zip(location.timeline,
+                                             location.series['values'][attr]):
+                        times.append(moment)
+                        attrs.append(attr)
+                        locs.append(label)
+                        vals.append(value)
+            frame = pandas.DataFrame({
+                'datetime': pandas.to_datetime(times),
+                'attribute': attrs,
+                'location': locs,
+                'value': vals,
+            })
+            return frame.set_index(['datetime', 'attribute', 'location'])
+
+        # wide
+        if len(locations) == 1:
+            frame = pandas.DataFrame({attr: self[attr] for attr in attributes})
+            frame.index.name = 'datetime'
+            frame.columns.name = 'attribute'
+            return frame
+
+        parts = {attr: self[attr].unstack('location') for attr in attributes}
+        return pandas.concat(parts, axis=1, names=['attribute', 'location'])
+
     @property
     def locations(self) -> dict:
         """Retrieve the time series locations matched as dict.

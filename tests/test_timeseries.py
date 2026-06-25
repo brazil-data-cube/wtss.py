@@ -24,11 +24,16 @@ instead of forcing callers to dig into the private ``_locations`` to correlate
 ``values(band)`` with ``timeline``.
 """
 
+import importlib.util
+
 import pandas
 import pytest
 
 from wtss.coverage import Coverage
 from wtss.timeseries import TimeSeries
+
+#: xarray is an optional dependency; skip its tests when it is absent.
+_HAS_XARRAY = importlib.util.find_spec('xarray') is not None
 
 TIMELINE = ['2017-01-01', '2017-01-17', '2017-02-02']
 
@@ -154,6 +159,48 @@ class TestMetadataApplication:
         col = df['NDVI'].tolist()
         assert col[0] == pytest.approx(0.1)
         assert col[1] != col[1]  # NaN
+
+
+@pytest.mark.skipif(not _HAS_XARRAY, reason='xarray is not installed')
+class TestToXarray:
+    """Ciclo v: to_xarray() yields a labelled Dataset for point and multipoint."""
+
+    def test_single_point_dims_and_values(self):
+        ts = _timeseries(
+            [_location_multi(-54.0, -12.0, {'NDVI': [1000, 2000, 3000],
+                                            'EVI': [10, 20, 30]})],
+            attributes=['NDVI', 'EVI'],
+        )
+        ds = ts.to_xarray()
+        assert set(ds.data_vars) == {'NDVI', 'EVI'}
+        assert ds['NDVI'].dims == ('time',)
+        assert ds['NDVI'].values.tolist() == [1000, 2000, 3000]
+        assert float(ds.longitude) == -54.0
+        assert float(ds.latitude) == -12.0
+        assert ds.sizes['time'] == 3
+
+    def test_multipoint_dims_and_coords(self):
+        ts = _timeseries([
+            _location_multi(-54.0, -12.0, {'NDVI': [1000, 2000, 3000]}),
+            _location_multi(-53.99, -12.0, {'NDVI': [1100, 2100, 3100]}),
+        ])
+        ds = ts.to_xarray()
+        assert ds['NDVI'].dims == ('time', 'location')
+        assert ds.sizes == {'time': 3, 'location': 2}
+        assert ds.longitude.values.tolist() == [-54.0, -53.99]
+        # column for the second location across time.
+        assert ds['NDVI'].isel(location=1).values.tolist() == [1100, 2100, 3100]
+
+    def test_apply_scale_and_mask(self):
+        ts = _timeseries(
+            [_location_multi(-54.0, -12.0, {'NDVI': [1000, -3000, 2000]})],
+            coverage=_coverage_with_meta(),
+        )
+        ds = ts.to_xarray(apply_scale=True, mask_nodata=True)
+        vals = ds['NDVI'].values
+        assert vals[0] == pytest.approx(0.1)
+        assert vals[1] != vals[1]  # NaN
+        assert vals[2] == pytest.approx(0.2)
 
 
 class TestDataFrameLong:

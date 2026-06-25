@@ -267,6 +267,73 @@ class TimeSeries:
         parts = {attr: series.unstack('location') for attr, series in columns.items()}
         return pandas.concat(parts, axis=1, names=['attribute', 'location'])
 
+    def to_xarray(self, apply_scale: bool = False, mask_nodata: bool = False):
+        """Return the time series as a labelled :class:`xarray.Dataset` (Ciclo v).
+
+        Each attribute becomes a data variable. Dimensions are:
+
+        - **Single location**: ``(time,)``; ``longitude``/``latitude`` are scalar
+          coordinates.
+        - **Multiple locations**: ``(time, location)``; ``longitude``/``latitude``
+          are coordinates along ``location``.
+
+        The polygon case (rebuilding a 2D ``(time, y, x)`` grid from sparse
+        pixels) is not handled here yet.
+
+        Args:
+            apply_scale (bool): Apply the band scale/offset client-side (Ciclo iv).
+            mask_nodata (bool): Replace nodata samples with ``NaN`` (Ciclo iv).
+
+        Raises:
+            ImportError: If xarray (or pandas/numpy) could not be imported.
+        """
+        try:
+            import numpy
+            import pandas
+            import xarray
+        except ImportError:
+            raise ImportError('You should install xarray (and numpy, pandas)!')
+
+        attributes = self.attributes
+        locations = list(self._locations.values())
+
+        if not locations:
+            return xarray.Dataset()
+
+        time = pandas.to_datetime(self.timeline)
+
+        if len(locations) == 1:
+            location = locations[0]
+            data_vars = {
+                attr: ('time', self._values_for(location, attr, apply_scale, mask_nodata))
+                for attr in attributes
+            }
+            return xarray.Dataset(
+                data_vars,
+                coords={'time': time, 'longitude': location.x, 'latitude': location.y},
+            )
+
+        # Multiple locations: dims (time, location).
+        data_vars = {}
+        for attr in attributes:
+            # rows = locations, columns = time; transpose to (time, location).
+            matrix = numpy.array(
+                [self._values_for(location, attr, apply_scale, mask_nodata)
+                 for location in locations],
+                dtype='float64',
+            ).T
+            data_vars[attr] = (('time', 'location'), matrix)
+
+        return xarray.Dataset(
+            data_vars,
+            coords={
+                'time': time,
+                'location': numpy.arange(len(locations)),
+                'longitude': ('location', [location.x for location in locations]),
+                'latitude': ('location', [location.y for location in locations]),
+            },
+        )
+
     @property
     def locations(self) -> dict:
         """Retrieve the time series locations matched as dict.

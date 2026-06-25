@@ -19,7 +19,6 @@
 """Unit-test configuration for the WTSS Python Client Library for."""
 
 import os
-from ssl import ALERT_DESCRIPTION_DECOMPRESSION_FAILURE
 
 import pytest
 import requests

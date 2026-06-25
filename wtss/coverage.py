@@ -60,8 +60,12 @@ class Coverage(dict):
 
     @property
     def crs(self):
-        """Return the coordinate reference system metadata."""
-        return self['bdc:crs']
+        """Return the coordinate reference system metadata.
+
+        Prefers the BDC-specific ``bdc:crs`` key, falling back to the generic
+        ``crs`` key so the client also works against non-BDC WTSS servers (F9).
+        """
+        return self.get('bdc:crs') or self.get('crs')
 
     @property
     def description(self):

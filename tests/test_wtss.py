@@ -18,9 +18,6 @@
 
 """Unit-test for the WTSS Python Client Library for."""
 
-from ssl import ALERT_DESCRIPTION_DECOMPRESSION_FAILURE
-from urllib.error import HTTPError
-
 import conftest
 import requests
 from pystac_client import Client

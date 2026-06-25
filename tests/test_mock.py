@@ -186,6 +186,13 @@ class TestCoverageMetadata:
         cv = service['MOD13Q1-6']
         assert cv.crs.startswith('+proj=sinu')
 
+    def test_crs_falls_back_to_generic_key(self, service):
+        """F9: a non-BDC server using the plain 'crs' key must still work."""
+        cv = service['MOD13Q1-6']
+        del cv['bdc:crs']
+        cv['crs'] = 'EPSG:4326'
+        assert cv.crs == 'EPSG:4326'
+
     def test_dimensions(self, service):
         cv = service['MOD13Q1-6']
         assert cv.dimensions == {'xsize': 172800, 'ysize': 86400}

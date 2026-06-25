@@ -20,10 +20,21 @@
 
 import inspect
 
+import numpy
 import pytest
 import requests
+import urllib3
 
+from wtss.coverage import Coverage
 from wtss.wtss import WTSS
+
+#: Minimal valid service root used to build a WTSS client without a server.
+_ROOT = {'wtss_version': '2.0', 'links': []}
+
+
+def _stub_request(monkeypatch, root=None):
+    """Make ``WTSS._request`` return a canned root so ``__init__`` succeeds offline."""
+    monkeypatch.setattr(WTSS, '_request', staticmethod(lambda *a, **k: root or _ROOT))
 
 
 class TestStrtobool:
@@ -104,3 +115,103 @@ class TestCliTs:
 
         click_params = {p.name for p in ts.params}
         assert {'start_datetime', 'end_datetime'} <= click_params
+
+
+class TestGetattrPrivateNames:
+    """Regression tests for B6: ``__getattr__`` must reject private/dunder names.
+
+    Probes such as ``__reduce_ex__`` or ``_ipython_*`` used to fall through to a
+    coverage lookup (and could recurse through ``coverages`` before it was ready).
+    """
+
+    def test_private_attr_raises_without_coverage_lookup(self, monkeypatch):
+        _stub_request(monkeypatch, {'wtss_version': '2.0',
+                                    'links': [{'rel': 'data', 'title': 'X MOD13Q1-6'}]})
+        service = WTSS('http://example.com/wtss')
+        # Coverage cache starts empty and must stay empty after a private probe.
+        assert service._collections == []
+        with pytest.raises(AttributeError):
+            service._not_a_real_attribute
+        assert service._collections == []
+
+    def test_dunder_probe_does_not_raise_keyerror(self, monkeypatch):
+        _stub_request(monkeypatch)
+        service = WTSS('http://example.com/wtss')
+        # hasattr swallows AttributeError; the point is it does not blow up.
+        assert hasattr(service, '__wrapped__') is False
+
+
+class TestLatLonValidation:
+    """Regression tests for B13: numeric latitude/longitude type checking.
+
+    ``type(x) not in (float, int)`` rejected ``numpy.float64`` and friends; the
+    check now uses ``numbers.Real`` (while still rejecting ``bool``).
+    """
+
+    def test_accepts_numpy_float(self):
+        opts = Coverage._check_input_parameters(
+            attributes=['NDVI'],
+            latitude=numpy.float64(-12.0),
+            longitude=numpy.float64(-54.0),
+        )
+        assert opts['geom']['type'] == 'Point'
+        assert [float(c) for c in opts['geom']['coordinates']] == [-54.0, -12.0]
+
+    def test_accepts_numpy_int(self):
+        opts = Coverage._check_input_parameters(
+            attributes=['NDVI'],
+            latitude=numpy.int32(-12),
+            longitude=numpy.int32(-54),
+        )
+        assert opts['geom']['type'] == 'Point'
+
+    def test_accepts_plain_python_numbers(self):
+        opts = Coverage._check_input_parameters(attributes=['NDVI'], latitude=-12, longitude=-54.0)
+        assert opts['geom']['type'] == 'Point'
+
+    def test_rejects_bool(self):
+        with pytest.raises(ValueError, match='must be numeric'):
+            Coverage._check_input_parameters(attributes=['NDVI'], latitude=True, longitude=-54.0)
+
+    def test_rejects_string(self):
+        with pytest.raises(ValueError, match='must be numeric'):
+            Coverage._check_input_parameters(attributes=['NDVI'], latitude='-12', longitude=-54.0)
+
+
+class TestSslVerification:
+    """Regression tests for B19/B20: SSL verification and warning suppression.
+
+    B20: the ``REQUEST_SSL_VERIFY`` flag is read once in ``__init__`` instead of
+    on every request. B19: ``urllib3.disable_warnings`` is opt-in, not a global
+    side effect of each call.
+    """
+
+    def test_verify_ssl_defaults_true(self, monkeypatch):
+        monkeypatch.delenv('REQUEST_SSL_VERIFY', raising=False)
+        _stub_request(monkeypatch)
+        assert WTSS('http://example.com/wtss')._verify_ssl is True
+
+    def test_verify_ssl_read_from_env(self, monkeypatch):
+        monkeypatch.setenv('REQUEST_SSL_VERIFY', '0')
+        _stub_request(monkeypatch)
+        assert WTSS('http://example.com/wtss')._verify_ssl is False
+
+    def test_explicit_arg_overrides_env(self, monkeypatch):
+        monkeypatch.setenv('REQUEST_SSL_VERIFY', '1')
+        _stub_request(monkeypatch)
+        assert WTSS('http://example.com/wtss', verify_ssl=False)._verify_ssl is False
+
+    def test_warnings_not_disabled_by_default(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(urllib3, 'disable_warnings', lambda *a, **k: calls.append(1))
+        _stub_request(monkeypatch)
+        # Insecure connection but no opt-in => global urllib3 state untouched.
+        WTSS('http://example.com/wtss', verify_ssl=False)
+        assert calls == []
+
+    def test_warnings_disabled_once_when_opted_in(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(urllib3, 'disable_warnings', lambda *a, **k: calls.append(1))
+        _stub_request(monkeypatch)
+        WTSS('http://example.com/wtss', verify_ssl=False, disable_ssl_warnings=True)
+        assert len(calls) == 1

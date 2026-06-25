@@ -67,13 +67,22 @@ class WTSS:
     def __init__(self,
                  url: str,
                  validate = False,
-                 access_token: str = None):
+                 access_token: str = None,
+                 verify_ssl: bool = None,
+                 disable_ssl_warnings: bool = False):
         """Create a WTSS client attached to the given host address (an URL).
 
         Args:
             url (str): URL for the WTSS server.
             validate (bool, optional): If True the client will validate the server response.
             access_token (str, optional): Authentication token to be used with the WTSS server.
+            verify_ssl (bool, optional): Whether to verify the server TLS certificate.
+                When ``None`` (default), it is read once from the ``REQUEST_SSL_VERIFY``
+                environment variable (defaults to enabled).
+            disable_ssl_warnings (bool, optional): Opt-in suppression of urllib3
+                ``InsecureRequestWarning``. Only takes effect when ``verify_ssl`` is
+                False. Defaults to False so the client never mutates global urllib3
+                state behind the user's back.
         """
         #: str: URL for the WTSS server.
         self._url = url
@@ -91,11 +100,21 @@ class WTSS:
         self._links = []
         self._collections = []
 
+        #: bool: TLS verification flag, read once instead of on every request (B20).
+        if verify_ssl is None:
+            verify_ssl = bool(strtobool(os.getenv('REQUEST_SSL_VERIFY', '1')))
+        self._verify_ssl = verify_ssl
+
+        # Suppress insecure-request warnings only when explicitly opted in,
+        # instead of disabling them globally on every request (B19).
+        if not self._verify_ssl and disable_ssl_warnings:
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
         self._service_info()
 
     def _service_info(self):
         try:
-            root = self._request(self._url, method='get', op='/', params=self.parameters)
+            root = self._request(self._url, method='get', op='/', params=self.parameters, verify=self._verify_ssl)
             self._version = root['wtss_version']
             self._links = root['links']
         except (KeyError, HTTPError) as e:
@@ -150,7 +169,8 @@ class WTSS:
                                        op=route,
                                        headers=headers,
                                        params=params,
-                                       json=options)
+                                       json=options,
+                                       verify=self._verify_ssl)
 
         return request_result
 
@@ -181,7 +201,7 @@ class WTSS:
             raise KeyError(f'Coverage {key} not found.')
 
         # url = urljoin(self._url, key)
-        coverage = self._request(self._url, op=key, method='get', params=self.parameters)
+        coverage = self._request(self._url, op=key, method='get', params=self.parameters, verify=self._verify_ssl)
 
         return Coverage(service=self, metadata=coverage)
 
@@ -207,6 +227,12 @@ class WTSS:
                 >>> service.MOD13Q1
                 Coverage...
         """
+        # Private/dunder names are never coverages. Reject them early so probes
+        # like ``__reduce_ex__`` or ``_ipython_*`` do not trigger a coverage
+        # lookup (and avoid recursing through ``coverages`` before it is set).
+        if name.startswith('_'):
+            raise AttributeError(f'No attribute named "{name}"')
+
         try:
             return self[name]
         except KeyError:
@@ -258,7 +284,7 @@ class WTSS:
         return html
 
     @staticmethod
-    def _request(url, op, method: str = 'post', headers=None, params=None, json=None):
+    def _request(url, op, method: str = 'post', headers=None, params=None, json=None, verify: bool = True):
         """Query the WTSS service using HTTP GET verb and return the result as a JSON document.
 
         Args:
@@ -278,10 +304,6 @@ class WTSS:
         url_components = [url, op]
 
         url = '/'.join(s.strip('/') for s in url_components)
-        verify = bool(strtobool(os.getenv('REQUEST_SSL_VERIFY', '1')))
-
-        if not verify:  # Remove warning for any insecure https requests
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
         response = getattr(requests, method)(url, headers=headers, params=params, json=json, verify=verify)
 

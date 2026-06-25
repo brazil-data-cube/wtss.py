@@ -19,6 +19,7 @@
 """A class that represents a coverage in WTSS."""
 
 import json
+import numbers
 from typing import List, Union
 
 import shapely.geometry
@@ -105,7 +106,12 @@ class Coverage(dict):
             if latitude is None or longitude is None:
                 raise ValueError("Argument geom or arguments latitude and longitude are mandatory.")
 
-            if (type(latitude) not in (float, int)) or (type(longitude) not in (float, int)):
+            def _is_real_number(value):
+                # Accept any real number (float, int, numpy.float64, Decimal, ...)
+                # but reject bool, which is a subclass of int.
+                return isinstance(value, numbers.Real) and not isinstance(value, bool)
+
+            if not _is_real_number(latitude) or not _is_real_number(longitude):
                 raise ValueError("Arguments latitude and longitude must be numeric.")
 
             if latitude < -90.0 or latitude > 90.0:

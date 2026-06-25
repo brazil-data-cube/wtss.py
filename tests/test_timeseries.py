@@ -27,6 +27,7 @@ instead of forcing callers to dig into the private ``_locations`` to correlate
 import pandas
 import pytest
 
+from wtss.coverage import Coverage
 from wtss.timeseries import TimeSeries
 
 TIMELINE = ['2017-01-01', '2017-01-17', '2017-02-02']
@@ -49,11 +50,17 @@ def _location_multi(lon, lat, values_by_attr):
     }
 
 
-def _timeseries(results, attributes=None):
+def _timeseries(results, attributes=None, coverage=None):
     data = {'results': results,
             'query': {'attributes': attributes or ['NDVI'], 'geom': {}}}
-    # _coverage is unused by __getitem__/df.
-    return TimeSeries(coverage=None, data=data)
+    return TimeSeries(coverage=coverage, data=data)
+
+
+def _coverage_with_meta():
+    """A Coverage exposing band metadata (nodata + scale/offset)."""
+    return Coverage(None, {'bands': [
+        {'name': 'NDVI', 'nodata': -3000, 'scale_factor': 0.0001, 'add_offset': 0.0},
+    ]})
 
 
 class TestSinglePoint:
@@ -113,6 +120,40 @@ class TestEmpty:
         series = _timeseries([])['NDVI']
         assert isinstance(series, pandas.Series)
         assert series.empty
+
+
+class TestMetadataApplication:
+    """Ciclo iv: series()/df() can scale and mask nodata client-side."""
+
+    def _ts(self):
+        return _timeseries(
+            [_location_multi(-54.0, -12.0, {'NDVI': [1000, -3000, 2000]})],
+            coverage=_coverage_with_meta(),
+        )
+
+    def test_series_default_is_raw(self):
+        assert self._ts()['NDVI'].tolist() == [1000, -3000, 2000]
+
+    def test_series_apply_scale(self):
+        out = self._ts().series('NDVI', apply_scale=True).tolist()
+        assert out == pytest.approx([0.1, -0.3, 0.2])
+
+    def test_series_mask_nodata(self):
+        out = self._ts().series('NDVI', mask_nodata=True).tolist()
+        assert out[0] == 1000 and out[2] == 2000
+        assert out[1] != out[1]  # NaN
+
+    def test_series_scale_and_mask(self):
+        out = self._ts().series('NDVI', apply_scale=True, mask_nodata=True).tolist()
+        assert out[0] == pytest.approx(0.1)
+        assert out[1] != out[1]  # nodata masked, never scaled
+        assert out[2] == pytest.approx(0.2)
+
+    def test_df_wide_apply_scale(self):
+        df = self._ts().df(format='wide', apply_scale=True, mask_nodata=True)
+        col = df['NDVI'].tolist()
+        assert col[0] == pytest.approx(0.1)
+        assert col[1] != col[1]  # NaN
 
 
 class TestDataFrameLong:

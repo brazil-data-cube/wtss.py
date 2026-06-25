@@ -266,6 +266,35 @@ class TestLatLonValidation:
             Coverage._check_input_parameters(attributes=['NDVI'], latitude='-12', longitude=-54.0)
 
 
+class TestApplyMetadata:
+    """Ciclo iv: Coverage._apply_metadata scales and masks raw band samples."""
+
+    def test_scale_and_offset_applied(self):
+        out = Coverage._apply_metadata(
+            [1000, 2000], {'scale_factor': 0.0001, 'add_offset': 0.1})
+        assert out == pytest.approx([0.2, 0.3])
+
+    def test_alternate_key_spellings(self):
+        out = Coverage._apply_metadata([10], {'data_scale': 2, 'data_offset': 1})
+        assert out == [21]
+
+    def test_nodata_is_masked_before_scaling(self):
+        out = Coverage._apply_metadata(
+            [1000, -3000, 2000], {'nodata': -3000, 'scale_factor': 0.001})
+        assert out[0] == pytest.approx(1.0)
+        assert out[1] != out[1]  # NaN: never scaled
+        assert out[2] == pytest.approx(2.0)
+
+    def test_flags_off_returns_raw(self):
+        out = Coverage._apply_metadata(
+            [1000, -3000], {'nodata': -3000, 'scale_factor': 0.001},
+            apply_scale=False, mask_nodata=False)
+        assert out == [1000, -3000]
+
+    def test_missing_scale_leaves_values_untouched(self):
+        assert Coverage._apply_metadata([5, 6], {'nodata': -1}) == [5, 6]
+
+
 class TestSslVerification:
     """Regression tests for B19/B20: SSL verification and warning suppression.
 

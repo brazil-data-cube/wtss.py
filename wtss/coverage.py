@@ -33,6 +33,11 @@ from .utils import render_html
 
 SUPPORTED_GEOMS = ('multipoint', 'point', 'polygon')
 
+#: Candidate band-metadata keys for scale/offset. WTSS servers are not
+#: consistent about the exact names, so we probe a few known spellings.
+_SCALE_KEYS = ('scale_factor', 'data_scale', 'scale')
+_OFFSET_KEYS = ('add_offset', 'data_offset', 'offset')
+
 
 class Coverage(dict):
     """A class that describes a coverage in WTSS.
@@ -93,6 +98,41 @@ class Coverage(dict):
         if self._sorted_timeline is None:
             self._sorted_timeline = sorted(self['timeline'])
         return self._sorted_timeline
+
+    def band(self, name):
+        """Return the metadata dict of a band by name, or ``{}`` if absent."""
+        return next((band for band in self.attributes if band.get('name') == name), {})
+
+    @staticmethod
+    def _apply_metadata(values, band_meta, apply_scale=True, mask_nodata=True):
+        """Apply band metadata (scale/offset and nodata masking) to raw values.
+
+        Args:
+            values (sequence): Raw integer/float samples for a band.
+            band_meta (dict): The band metadata (see :attr:`attributes`).
+            apply_scale (bool): Multiply by ``scale`` and add ``offset`` when those
+                keys are present in ``band_meta``. Defaults to True.
+            mask_nodata (bool): Replace samples equal to ``nodata`` with ``NaN``.
+                Defaults to True.
+
+        Returns:
+            list: The transformed values. Masking is applied first, so the
+            ``nodata`` sentinel is never scaled.
+        """
+        band_meta = band_meta or {}
+        nodata = band_meta.get('nodata')
+        scale = next((band_meta[k] for k in _SCALE_KEYS if band_meta.get(k) is not None), None)
+        offset = next((band_meta[k] for k in _OFFSET_KEYS if band_meta.get(k) is not None), 0)
+
+        result = []
+        for value in values:
+            if mask_nodata and nodata is not None and value == nodata:
+                result.append(float('nan'))
+            elif apply_scale and scale is not None:
+                result.append(value * scale + offset)
+            else:
+                result.append(value)
+        return result
 
     @staticmethod
     def _check_input_parameters(**options):

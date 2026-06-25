@@ -130,7 +130,15 @@ class TimeSeries:
 
         return entries
 
-    def __getitem__(self, attr_name: str):
+    def _values_for(self, location, attr_name, apply_scale, mask_nodata):
+        """Return a location's samples for an attribute, applying band metadata."""
+        raw = location.series['values'][attr_name]
+        if not (apply_scale or mask_nodata) or self._coverage is None:
+            return raw
+        band_meta = self._coverage.band(attr_name)
+        return self._coverage._apply_metadata(raw, band_meta, apply_scale, mask_nodata)
+
+    def series(self, attr_name: str, apply_scale: bool = False, mask_nodata: bool = False):
         """Return the time series of an attribute as a time-aligned pandas Series.
 
         Unlike :meth:`values`, the result carries the timeline (as a
@@ -142,6 +150,10 @@ class TimeSeries:
           ``(datetime, location)``, where ``location`` is the pixel-center
           ``(longitude, latitude)`` tuple. Use ``.unstack('location')`` to get a
           wide :class:`pandas.DataFrame` (one column per location).
+
+        Args:
+            apply_scale (bool): Apply the band scale/offset client-side (Ciclo iv).
+            mask_nodata (bool): Replace nodata samples with ``NaN`` (Ciclo iv).
 
         Raises:
             KeyError: If ``attr_name`` is not present in the time series.
@@ -166,14 +178,15 @@ class TimeSeries:
         if len(locations) == 1:
             location = locations[0]
             index = pandas.to_datetime(location.timeline)
-            return pandas.Series(location.series['values'][attr_name],
+            return pandas.Series(self._values_for(location, attr_name, apply_scale, mask_nodata),
                                  index=index, name=attr_name)
 
         # Multiple locations: build a (datetime, location) MultiIndex Series.
         times, locs, vals = [], [], []
         for location in locations:
             label = (location.x, location.y)
-            for moment, value in zip(location.timeline, location.series['values'][attr_name]):
+            values = self._values_for(location, attr_name, apply_scale, mask_nodata)
+            for moment, value in zip(location.timeline, values):
                 times.append(moment)
                 locs.append(label)
                 vals.append(value)
@@ -183,10 +196,14 @@ class TimeSeries:
 
         return pandas.Series(vals, index=index, name=attr_name).sort_index()
 
-    def df(self, format: str = 'long'):
+    def __getitem__(self, attr_name: str):
+        """Return ``series(attr_name)`` with raw values (see :meth:`series`)."""
+        return self.series(attr_name)
+
+    def df(self, format: str = 'long', apply_scale: bool = False, mask_nodata: bool = False):
         """Return the time series as a pandas DataFrame.
 
-        Builds on :meth:`__getitem__`, so values are always aligned with their
+        Builds on :meth:`series`, so values are always aligned with their
         timeline and location (addresses the same gap as B9, Ciclo iii).
 
         Args:
@@ -198,6 +215,8 @@ class TimeSeries:
                 - ``'wide'``: index is the ``datetime``. Columns are the
                   attributes for a single location, or a ``(attribute, location)``
                   MultiIndex for several locations.
+            apply_scale (bool): Apply the band scale/offset client-side (Ciclo iv).
+            mask_nodata (bool): Replace nodata samples with ``NaN`` (Ciclo iv).
 
         Raises:
             ValueError: If ``format`` is not ``'long'`` or ``'wide'``.
@@ -222,8 +241,8 @@ class TimeSeries:
             for attr in attributes:
                 for location in locations:
                     label = (location.x, location.y)
-                    for moment, value in zip(location.timeline,
-                                             location.series['values'][attr]):
+                    values = self._values_for(location, attr, apply_scale, mask_nodata)
+                    for moment, value in zip(location.timeline, values):
                         times.append(moment)
                         attrs.append(attr)
                         locs.append(label)
@@ -237,13 +256,15 @@ class TimeSeries:
             return frame.set_index(['datetime', 'attribute', 'location'])
 
         # wide
+        columns = {attr: self.series(attr, apply_scale, mask_nodata) for attr in attributes}
+
         if len(locations) == 1:
-            frame = pandas.DataFrame({attr: self[attr] for attr in attributes})
+            frame = pandas.DataFrame(columns)
             frame.index.name = 'datetime'
             frame.columns.name = 'attribute'
             return frame
 
-        parts = {attr: self[attr].unstack('location') for attr in attributes}
+        parts = {attr: series.unstack('location') for attr, series in columns.items()}
         return pandas.concat(parts, axis=1, names=['attribute', 'location'])
 
     @property

@@ -129,3 +129,7 @@ venv.bak/
 
 # MacOS
 .DS_Store
+
+# Documentos de acompanhamento do TG (somente local)
+DIAGNOSTICO.md
+MELHORIAS.md
